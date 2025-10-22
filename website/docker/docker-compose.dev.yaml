@@ -1,0 +1,16 @@
+services:
+  website:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.dev
+    container_name: website-dev
+    ports:
+      - "4200:4200"
+    volumes:
+      - ../my-app:/app
+      - website_data:/app/node_modules
+    environment:
+      - NODE_ENV=development
+
+volumes:
+  website_data:

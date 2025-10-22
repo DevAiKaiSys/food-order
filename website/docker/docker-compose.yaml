@@ -1,0 +1,11 @@
+services:
+  # Angular Frontend with Nginx
+  frontend:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+      target: production
+    container_name: website
+    restart: always
+    ports:
+      - "80:80"
