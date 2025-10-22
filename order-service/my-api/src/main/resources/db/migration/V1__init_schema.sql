@@ -20,7 +20,6 @@
 
     create table orders (
         total_amount decimal(10,2) not null,
-        cancelled_at datetime(6),
         created_at datetime(6) not null,
         customer_id bigint not null,
         id bigint not null auto_increment,

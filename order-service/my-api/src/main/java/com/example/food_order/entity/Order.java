@@ -47,8 +47,6 @@ public class Order {
     @UpdateTimestamp
     private OffsetDateTime updatedAt;
 
-    private OffsetDateTime cancelledAt;
-
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();
