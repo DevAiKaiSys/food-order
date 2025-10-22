@@ -1,6 +1,7 @@
 package com.example.food_order.exception;
 
 import com.example.food_order.dto.response.ApiResponse;
+import com.example.food_order.util.DataUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {

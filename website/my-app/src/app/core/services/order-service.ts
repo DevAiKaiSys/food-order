@@ -60,7 +60,9 @@ export class OrderService {
 
   createOrder(order: Partial<Order>): Observable<any> {
     return this.http.post<any>(this.apiUrl, order).pipe(
-      tap(() => this.loadOrders()),
+      tap(() => {
+        // this.loadOrders()
+      }),
       catchError(error => {
         console.error('Error creating order:', error);
         return throwError(() => error);
