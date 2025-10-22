@@ -1,0 +1,39 @@
+{
+	"info": {
+		"_postman_id": "08dadd92-8a52-4346-b083-46e74a0b8bec",
+		"name": "Food Order API",
+		"description": "Postman collection สำหรับทดสอบ Order, Product, Customer API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30479689"
+	},
+	"item": [
+		{
+			"name": "Create Order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customer\": \"35634\",\n  \"phone\": \"08765341523\",\n  \"items\": [\n    { \"id\": 3, \"menuName\": \"ต้มยำกุ้ง\", \"price\": 80, \"image\": \"https://cdn-icons-png.flaticon.com/512/1046/1046784.png\", \"category\": \"อาหารประเภทต้ม\", \"qty\": 3 },\n    { \"id\": 2, \"menuName\": \"ส้มตำ\", \"price\": 40, \"image\": \"https://cdn-icons-png.flaticon.com/512/933/933310.png\", \"category\": \"อาหารจานเดียว\", \"qty\": 3 },\n    { \"id\": 1, \"menuName\": \"ข้าวผัดกุ้ง\", \"price\": 60, \"image\": \"https://cdn-icons-png.flaticon.com/512/3174/3174887.png\", \"category\": \"อาหารจานหลัก\", \"qty\": 1 },\n    { \"id\": 5, \"menuName\": \"ข้าวมันไก่\", \"price\": 45, \"image\": \"https://cdn-icons-png.flaticon.com/512/3174/3174891.png\", \"category\": \"อาหารจานเดียว\", \"qty\": 1 }\n  ],\n  \"total\": 465\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/orders",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"orders"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
