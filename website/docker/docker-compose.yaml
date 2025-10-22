@@ -1,6 +1,6 @@
 services:
   # Angular Frontend with Nginx
-  frontend:
+  website:
     build:
       context: ../
       dockerfile: docker/Dockerfile
