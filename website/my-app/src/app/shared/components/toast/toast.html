@@ -1,0 +1,20 @@
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    @if (toast) {
+    <div class="toast show" role="alert">
+        <div class="toast-header" [class.bg-success]="toast.type === 'success'"
+            [class.bg-danger]="toast.type === 'error'" [class.bg-info]="toast.type === 'info'"
+            [class.text-white]="true">
+            <i class="bi" [class.bi-check-circle]="toast.type === 'success'"
+                [class.bi-x-circle]="toast.type === 'error'" [class.bi-info-circle]="toast.type === 'info'"></i>
+            <strong class="me-auto ms-2">
+                {{toast.type === 'success' ? 'สำเร็จ' :
+                toast.type === 'error' ? 'ผิดพลาด' : 'แจ้งเตือน'}}
+            </strong>
+            <button type="button" class="btn-close btn-close-white" (click)="toast = null"></button>
+        </div>
+        <div class="toast-body">
+            {{toast.message}}
+        </div>
+    </div>
+    }
+</div>

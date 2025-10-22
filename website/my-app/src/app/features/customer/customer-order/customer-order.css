@@ -1,0 +1,27 @@
+.card {
+    border-radius: 12px;
+}
+
+.card-body {
+    padding: 1.5rem;
+
+    img {
+        height: 180px;
+        object-fit: contain;
+    }
+}
+
+@media (max-width: 992px) {
+    .sticky-top {
+        position: relative;
+        top: auto;
+    }
+}
+
+.floating-cart-btn {
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.floating-cart-btn:hover {
+    transform: scale(1.1);
+}

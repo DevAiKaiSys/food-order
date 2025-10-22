@@ -1,1 +1,157 @@
-<p>customer-order works!</p>
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h3 mb-2 fw-bold text-primary">
+            <i class="bi bi-shop"></i> สั่งอาหารออนไลน์
+          </h1>
+          <p class="text-muted mb-0">เลือกเมนูอาหารที่คุณชื่นชอบ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Menu Items (Left Side on Desktop, Top on Mobile) -->
+    <div class="col-12 col-lg-8">
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-3">
+        @for (item of menuItems; track item) {
+        <div class="col">
+          <div class="card h-100 shadow-sm hover-card">
+            <div class="card-body text-center">
+              <img [src]="item.image" alt="{{item.menuName}}" class="card-img-top img-fluid"
+                (error)="onImageError($event)">
+              <h5 class="card-title fw-bold">{{item.menuName}}</h5>
+              <p class="text-muted small mb-3">{{item.category}}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="h5 text-primary mb-0 fw-bold">฿{{item.price}}</span>
+                <button class="btn btn-primary btn-sm" (click)="addToCart(item)">
+                  <i class="bi bi-plus-circle"></i> เพิ่ม
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Cart Sidebar (Right Side on Desktop, Bottom on Mobile) -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm sticky-top" style="top: 80px;">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-cart"></i> ตะกร้าสินค้า
+            <span class="badge bg-light text-primary ms-2">{{cart.length}}</span>
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Empty Cart -->
+          @if (cart.length === 0) {
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-cart-x fs-1 d-block mb-3"></i>
+            <p>ไม่มีสินค้าในตะกร้า</p>
+          </div>
+          }
+
+          <!-- Cart Items -->
+          @if (cart.length > 0) {
+          <div>
+            <div class="cart-items" style="max-height: 300px; overflow-y: auto;">
+              @for (item of cart; track item) {
+              <app-cart-item-component [item]="item" (removeItem)="removeFromCart(item.id)"
+                (updateQuantity)="updateQty(item.id, $event.change)">
+              </app-cart-item-component>
+              }
+            </div>
+            <!-- Customer Info Form -->
+            <div class="mt-4">
+              <h6 class="fw-bold mb-3">ข้อมูลลูกค้า</h6>
+              <div class="mb-3">
+                <label class="form-label small">ชื่อ-นามสกุล</label>
+                <input type="text" class="form-control" [(ngModel)]="customerName" placeholder="กรอกชื่อ" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small">เบอร์โทร</label>
+                <input type="tel" class="form-control" [(ngModel)]="customerPhone" placeholder="08X-XXX-XXXX" required>
+              </div>
+            </div>
+            <!-- Total and Submit -->
+            <div class="border-top pt-3 mt-3">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="h6 mb-0">ยอดรวม</span>
+                <span class="h4 mb-0 text-primary fw-bold">฿{{getTotal()}}</span>
+              </div>
+              <button class="btn btn-success btn-lg w-100" (click)="submitOrder()"
+                [disabled]="cart.length === 0 || !customerName || !customerPhone">
+                <i class="bi bi-check-circle"></i> ยืนยันสั่งซื้อ
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Floating Cart Button -->
+<button class="btn btn-primary btn-lg rounded-circle position-fixed d-lg-none"
+  style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1000;" data-bs-toggle="offcanvas"
+  data-bs-target="#mobileCartOffcanvas"> <i class="bi bi-cart"></i> <span
+    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"> {{cart.length}} </span>
+</button>
+
+<!-- Mobile Cart Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="mobileCartOffcanvas">
+  <div class="offcanvas-header bg-primary text-white">
+    <h5 class="offcanvas-title"> <i class="bi bi-cart"></i> ตะกร้าสินค้า ({{cart.length}}) </h5> <button type="button"
+      class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <!-- Cart Items (same as Desktop) -->
+    @if (cart.length === 0) {
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-cart-x fs-1 d-block mb-3"></i>
+      <p>ไม่มีสินค้าในตะกร้า</p>
+    </div>
+    }
+
+    @if (cart.length > 0) {
+    <div>
+      <div class="cart-items" style="max-height: 300px; overflow-y: auto;">
+        @for (item of cart; track item) {
+        <app-cart-item-component [item]="item" (removeItem)="removeFromCart(item.id)"
+          (updateQuantity)="updateQty(item.id, $event.change)">
+        </app-cart-item-component>
+        }
+      </div>
+      <!-- Customer Info Form -->
+      <div class="mt-4">
+        <h6 class="fw-bold mb-3">ข้อมูลลูกค้า</h6>
+        <div class="mb-3">
+          <label class="form-label small">ชื่อ-นามสกุล</label>
+          <input type="text" class="form-control" [(ngModel)]="customerName" placeholder="กรอกชื่อ" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">เบอร์โทร</label>
+          <input type="tel" class="form-control" [(ngModel)]="customerPhone" placeholder="08X-XXX-XXXX" required>
+        </div>
+      </div>
+      <!-- Total and Submit -->
+      <div class="border-top pt-3 mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="h6 mb-0">ยอดรวม</span>
+          <span class="h4 mb-0 text-primary fw-bold">฿{{getTotal()}}</span>
+        </div>
+        <button class="btn btn-success btn-lg w-100" (click)="submitOrder()"
+          [disabled]="cart.length === 0 || !customerName || !customerPhone">
+          <i class="bi bi-check-circle"></i> ยืนยันสั่งซื้อ
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</div>

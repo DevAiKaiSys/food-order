@@ -8,6 +8,8 @@ website/
 ├── my-app/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── features/   # Feature modules (customer, admin, auth)
+│   │   │   ├── core/       # Singleton services
+│   │   │   ├── features/   # Feature modules (customer, admin)
+│   │   │   ├── shared/     # Reusable components, models
 │   │   ├── environments/
 ```
