@@ -2,6 +2,7 @@ package com.example.food_order.dto.response;
 
 import com.example.food_order.util.DateTimeUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ import java.time.OffsetDateTime;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class ApiResponse<T> {
 
     @JsonProperty("status_code")
@@ -16,19 +18,21 @@ public class ApiResponse<T> {
 
     @JsonProperty("status_msg")
     private String statusMsg;
-
-    @JsonProperty("timestamp")
     private String timestamp;
 
     @JsonProperty("span_id")
     private String spanId;
-
-    @JsonProperty("data")
     private T data;
 
+    // Helper method for Success with statusCode defaulting to "MDB-200"
     public static <T> ApiResponse<T> success(T data, String spanId) {
+        return success(data, spanId, "MDB-200"); // Default statusCode to "MDB-200"
+    }
+
+    // Helper method for Success with a custom statusCode
+    public static <T> ApiResponse<T> success(T data, String spanId, String statusCode) {
         return ApiResponse.<T>builder()
-                .statusCode("MDB-200")
+                .statusCode(statusCode)
                 .statusMsg("SUCCESS")
                 .timestamp(DateTimeUtil.formatDateTime(OffsetDateTime.now()))
                 .spanId(spanId)
@@ -36,9 +40,10 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    public static <T> ApiResponse<T> error(String code, String message, String spanId) {
+    // Helper method สำหรับ Error Response
+    public static <T> ApiResponse<T> error(String message, String spanId, String statusCode) {
         return ApiResponse.<T>builder()
-                .statusCode("MDB-" + code)
+                .statusCode(statusCode)
                 .statusMsg(message)
                 .timestamp(DateTimeUtil.formatDateTime(OffsetDateTime.now()))
                 .spanId(spanId)

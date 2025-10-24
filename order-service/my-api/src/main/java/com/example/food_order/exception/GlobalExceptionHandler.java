@@ -1,57 +1,52 @@
 package com.example.food_order.exception;
 
 import com.example.food_order.dto.response.ApiResponse;
-import com.example.food_order.util.DataUtil;
+import com.example.food_order.util.TracerUtil;
+import io.micrometer.tracing.Tracer;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleOrderNotFound(OrderNotFoundException ex) {
-        String spanId = DataUtil.generateSpanId();
-        ApiResponse<Void> response = ApiResponse.error("MDB-404", ex.getMessage(), spanId);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
+    private final Tracer tracer;
 
-    @ExceptionHandler(InvalidStatusTransitionException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidStatusTransition(InvalidStatusTransitionException ex) {
-        String spanId = DataUtil.generateSpanId();
-        ApiResponse<Void> response = ApiResponse.error("MDB-400", ex.getMessage(), spanId);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(buildErrorResponse("MDB-404", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
-        String spanId = DataUtil.generateSpanId();
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder()
-                .statusCode("MDB-400")
-                .statusMsg("Validation Failed")
-                .spanId(spanId)
-                .data(errors)
-                .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .orElse("Validation failed");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse("MDB-400", message));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
-        String spanId = DataUtil.generateSpanId();
-        ApiResponse<Void> response = ApiResponse.error("MDB-500", "Internal Server Error: " + ex.getMessage(), spanId);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    public ResponseEntity<ApiResponse<Void>> handleGeneral(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(buildErrorResponse("MDB-500", "Internal server error"));
+    }
+
+    private ApiResponse<Void> buildErrorResponse(String code, String message) {
+        return ApiResponse.<Void>builder()
+                .statusCode(code)
+                .statusMsg(message)
+                .spanId(TracerUtil.getSpanId(tracer))
+                .build();
     }
 }

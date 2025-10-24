@@ -8,15 +8,13 @@ import com.example.food_order.dto.response.OrderDetailResponse.OrderItemInfo;
 import com.example.food_order.entity.OrderStatus;
 import com.example.food_order.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -29,22 +27,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
+@WebMvcTest(OrderController.class)
 class OrderControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private OrderService orderService;  // mock OrderService
-
-    @InjectMocks
-    private OrderController orderController;  // inject mock OrderService เข้าไปใน OrderController
-
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private OrderService orderService;
+
+    @MockitoBean
+    private Tracer tracer;
 
     private CreateOrderRequest createOrderRequest;
     private OrderDetailResponse orderDetailResponse;
@@ -57,9 +53,10 @@ class OrderControllerTest {
         orderItemRequest.setQty(1);
         orderItemRequest.setPrice(BigDecimal.valueOf(100));
         createOrderRequest = new CreateOrderRequest();
-        createOrderRequest.setCustomer("John Doe");
+        createOrderRequest.setCustomerName("John Doe");
         createOrderRequest.setPhone("0812345678");
         createOrderRequest.setItems(Collections.singletonList(orderItemRequest));
+        createOrderRequest.setTotal(BigDecimal.valueOf(100));
 
         CustomerInfo customerInfo = CustomerInfo.builder()
                 .id(1L)
@@ -94,7 +91,7 @@ class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createOrderRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status_code").value("MDB-200"))
+                .andExpect(jsonPath("$.status_code").value("MDB-201"))
                 .andExpect(jsonPath("$.status_msg").value("SUCCESS"))
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.customer.name").value("John Doe"))

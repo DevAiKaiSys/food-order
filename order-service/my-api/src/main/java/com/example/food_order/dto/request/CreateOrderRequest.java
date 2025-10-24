@@ -10,11 +10,15 @@ import java.util.List;
 
 @Data
 public class CreateOrderRequest {
-    private String customer;
+    @NotEmpty(message = "Customer Name is required")
+    @NotNull(message = "Customer Name is required")
+    private String customerName;
+    @NotEmpty(message = "Phone is required")
     @NotNull(message = "Phone is required")
     private String phone;
     @NotEmpty(message = "Order must have at least one item")
     @Valid
     private List<OrderItemRequest> items;
+    @NotNull(message = "Total price is required")
     private BigDecimal total;
 }

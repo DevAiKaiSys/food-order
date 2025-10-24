@@ -31,9 +31,6 @@ public class OrderDetailResponse {
     @JsonProperty("updated_at")
     private String updatedAt;
 
-    @JsonProperty("cancelled_at")
-    private String cancelledAt;
-
     @Data
     @Builder
     public static class CustomerInfo {

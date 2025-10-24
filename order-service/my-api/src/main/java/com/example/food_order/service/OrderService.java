@@ -9,7 +9,6 @@ import com.example.food_order.entity.OrderItem;
 import com.example.food_order.entity.OrderStatus;
 import com.example.food_order.repository.CustomerRepository;
 import com.example.food_order.repository.OrderRepository;
-import com.example.food_order.util.DataUtil;
 import com.example.food_order.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,17 +29,17 @@ public class OrderService {
 
     @Transactional
     public OrderDetailResponse createOrder(CreateOrderRequest request) {
-        log.info("Creating new order for customer: {} phone: {}", request.getCustomer(), request.getPhone());
+        log.info("Creating new order for customer: {} phone: {}", request.getCustomerName(), request.getPhone());
 
         // หา customer จากเบอร์โทร
         Customer customer = customerRepository.findByPhone(request.getPhone())
                 .map(existing -> {
-                    existing.setName(request.getCustomer());
+                    existing.setName(request.getCustomerName());
                     return customerRepository.save(existing);
                 })
                 .orElseGet(() -> {
                     Customer newCustomer = new Customer();
-                    newCustomer.setName(request.getCustomer());
+                    newCustomer.setName(request.getCustomerName());
                     newCustomer.setPhone(request.getPhone());
                     return customerRepository.save(newCustomer);
                 });
@@ -48,7 +47,6 @@ public class OrderService {
         Order order = Order.builder()
                 .customer(customer)
                 .status(OrderStatus.PENDING)
-                .spanId(DataUtil.generateSpanId())
                 .build();
 
         BigDecimal totalAmount = BigDecimal.ZERO;

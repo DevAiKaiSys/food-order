@@ -14,6 +14,12 @@ describe('CartItemComponent', () => {
 
     fixture = TestBed.createComponent(CartItemComponent);
     component = fixture.componentInstance;
+    component.item = {
+        id: 1,
+        menuName: 'ข้าวมันไก่',
+        quantity: 1,
+        price: 50
+    };
     fixture.detectChanges();
   });
 

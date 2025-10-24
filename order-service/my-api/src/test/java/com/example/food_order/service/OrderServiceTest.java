@@ -48,7 +48,7 @@ class OrderServiceTest {
         customer.setPhone("1234567890");
 
         createOrderRequest = new CreateOrderRequest();
-        createOrderRequest.setCustomer("Test Customer");
+        createOrderRequest.setCustomerName("Test Customer");
         createOrderRequest.setPhone("1234567890");
         OrderItemRequest orderItemRequest = new OrderItemRequest();
         orderItemRequest.setMenuName("Test Menu");
