@@ -1,6 +1,6 @@
 export interface MenuItem {
   id: number;
-  menuName: string;
+  menu_name: string;
   price: number;
   image: string;
   category?: string;
@@ -11,9 +11,11 @@ export interface CartItem extends MenuItem {
 }
 
 export interface Order {
-  id: string;
+  id: number;
+  slip_id: string;
   customer_name: string;
-  items: number;
+  phone: string;
+  item_count: number;
   total_amount: number;
   status: OrderStatus;
   created_at: string;

@@ -10,15 +10,15 @@ describe('CartItemComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CartItemComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(CartItemComponent);
     component = fixture.componentInstance;
     component.item = {
-        id: 1,
-        menuName: 'ข้าวมันไก่',
-        quantity: 1,
-        price: 50
+      id: 1,
+      menu_name: 'ข้าวมันไก่',
+      quantity: 1,
+      price: 50
     };
     fixture.detectChanges();
   });

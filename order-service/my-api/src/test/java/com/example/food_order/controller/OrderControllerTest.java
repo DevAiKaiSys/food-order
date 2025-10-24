@@ -55,8 +55,8 @@ class OrderControllerTest {
         createOrderRequest = new CreateOrderRequest();
         createOrderRequest.setCustomerName("John Doe");
         createOrderRequest.setPhone("0812345678");
-        createOrderRequest.setItems(Collections.singletonList(orderItemRequest));
-        createOrderRequest.setTotal(BigDecimal.valueOf(100));
+        createOrderRequest.setDetails(Collections.singletonList(orderItemRequest));
+        createOrderRequest.setTotalAmount(BigDecimal.valueOf(100));
 
         CustomerInfo customerInfo = CustomerInfo.builder()
                 .id(1L)

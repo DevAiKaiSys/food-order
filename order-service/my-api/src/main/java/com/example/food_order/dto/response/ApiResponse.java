@@ -1,7 +1,6 @@
 package com.example.food_order.dto.response;
 
 import com.example.food_order.util.DateTimeUtil;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,14 +12,11 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class ApiResponse<T> {
 
-    @JsonProperty("status_code")
     private String statusCode;
 
-    @JsonProperty("status_msg")
     private String statusMsg;
     private String timestamp;
 
-    @JsonProperty("span_id")
     private String spanId;
     private T data;
 

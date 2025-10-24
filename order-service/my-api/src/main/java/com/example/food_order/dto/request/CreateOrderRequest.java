@@ -18,7 +18,7 @@ public class CreateOrderRequest {
     private String phone;
     @NotEmpty(message = "Order must have at least one item")
     @Valid
-    private List<OrderItemRequest> items;
+    private List<OrderItemRequest> details;
     @NotNull(message = "Total price is required")
-    private BigDecimal total;
+    private BigDecimal totalAmount;
 }

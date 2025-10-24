@@ -9,7 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +23,9 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String slipId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
@@ -42,10 +45,10 @@ public class Order {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     @UpdateTimestamp
-    private OffsetDateTime updatedAt;
+    private ZonedDateTime updatedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -55,7 +58,7 @@ public class Order {
         items.add(item);
         item.setOrder(this);
     }
-
+    
     public void calculateTotalAmount() {
         this.totalAmount = items.stream()
                 .map(item -> {

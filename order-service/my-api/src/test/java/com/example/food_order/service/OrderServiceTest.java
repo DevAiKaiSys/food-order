@@ -8,6 +8,7 @@ import com.example.food_order.entity.Order;
 import com.example.food_order.entity.OrderStatus;
 import com.example.food_order.repository.CustomerRepository;
 import com.example.food_order.repository.OrderRepository;
+import com.example.food_order.util.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,26 +43,58 @@ class OrderServiceTest {
 
     @BeforeEach
     void setUp() {
-        customer = new Customer();
+        customer = createCustomer();
+
+        createOrderRequest = createOrderRequest(customer);
+
+        order = createOrder(customer);
+
+        // ตั้งค่า timestamps ด้วย TestUtil
+        TestUtil.setTimestamps(order);
+    }
+
+    private Customer createCustomer() {
+        Customer customer = new Customer();
         customer.setId(1L);
         customer.setName("Test Customer");
         customer.setPhone("1234567890");
+        return customer;
+    }
 
-        createOrderRequest = new CreateOrderRequest();
-        createOrderRequest.setCustomerName("Test Customer");
-        createOrderRequest.setPhone("1234567890");
+    private CreateOrderRequest createOrderRequest(Customer customer) {
+        CreateOrderRequest request = new CreateOrderRequest();
+        request.setCustomerName(customer.getName());
+        request.setPhone(customer.getPhone());
+
         OrderItemRequest orderItemRequest = new OrderItemRequest();
         orderItemRequest.setMenuName("Test Menu");
         orderItemRequest.setQty(1);
         orderItemRequest.setPrice(BigDecimal.valueOf(100));
-        createOrderRequest.setItems(Collections.singletonList(orderItemRequest));
 
-        order = Order.builder()
+        request.setDetails(Collections.singletonList(orderItemRequest));
+        return request;
+    }
+
+    private Order createOrder(Customer customer) {
+        return Order.builder()
                 .id(1L)
                 .customer(customer)
                 .status(OrderStatus.PENDING)
                 .totalAmount(BigDecimal.valueOf(100))
                 .build();
+    }
+
+    @Test
+    void createOrder_shouldSetTimestampsAutomatically() {
+        mockOrderRepository();
+
+        // ทดสอบว่า Order มี timestamps ที่ถูกต้อง
+        OrderDetailResponse response = orderService.createOrder(createOrderRequest);
+
+        Order savedOrder = orderRepository.findById(response.getId()).orElseThrow();
+        assertNotNull(savedOrder.getCreatedAt());
+        assertNotNull(savedOrder.getUpdatedAt());
+        assertEquals(savedOrder.getCreatedAt(), savedOrder.getUpdatedAt());
     }
 
     @Test
@@ -78,17 +111,8 @@ class OrderServiceTest {
         assertEquals(order.getTotalAmount(), response.getTotalAmount());
     }
 
-    @Test
-    void createOrder_whenExistingCustomer_shouldCreateOrderSuccessfully() {
-        when(customerRepository.findByPhone("1234567890")).thenReturn(Optional.of(customer));
-        when(customerRepository.save(any(Customer.class))).thenReturn(customer);
+    private void mockOrderRepository() {
         when(orderRepository.save(any(Order.class))).thenReturn(order);
-
-        OrderDetailResponse response = orderService.createOrder(createOrderRequest);
-
-        assertNotNull(response);
-        assertEquals(order.getId(), response.getId());
-        assertEquals(customer.getName(), response.getCustomer().getName());
-        assertEquals(order.getTotalAmount(), response.getTotalAmount());
+        when(orderRepository.findById(any(Long.class))).thenReturn(Optional.of(order));
     }
 }

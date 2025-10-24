@@ -21,9 +21,9 @@
         <div class="col">
           <div class="card h-100 shadow-sm hover-card">
             <div class="card-body text-center">
-              <img [src]="item.image" alt="{{item.menuName}}" class="card-img-top img-fluid"
+              <img [src]="item.image" alt="{{item.menu_name}}" class="card-img-top img-fluid"
                 (error)="onImageError($event)">
-              <h5 class="card-title fw-bold">{{item.menuName}}</h5>
+              <h5 class="card-title fw-bold">{{item.menu_name}}</h5>
               <p class="text-muted small mb-3">{{item.category}}</p>
               <div class="d-flex justify-content-between align-items-center">
                 <span class="h5 text-primary mb-0 fw-bold">฿{{item.price}}</span>
@@ -59,7 +59,11 @@
           <!-- Cart Items -->
           @if (cart.length > 0) {
           <div>
-            <div class="cart-items" style="max-height: 300px; overflow-y: auto;">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="h6 mb-0">ยอดรวม</span>
+              <span class="h4 mb-0 text-primary fw-bold">฿{{getTotal()}}</span>
+            </div>
+            <div class="cart-items pe-2 border-top pt-3 mt-3" style="max-height: 300px; overflow-y: auto;">
               @for (item of cart; track item) {
               <app-cart-item-component [item]="item" (removeItem)="removeFromCart(item.id)"
                 (updateQuantity)="updateQty(item.id, $event.change)">
@@ -80,10 +84,6 @@
             </div>
             <!-- Total and Submit -->
             <div class="border-top pt-3 mt-3">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="h6 mb-0">ยอดรวม</span>
-                <span class="h4 mb-0 text-primary fw-bold">฿{{getTotal()}}</span>
-              </div>
               <button class="btn btn-success btn-lg w-100" (click)="submitOrder()"
                 [disabled]="cart.length === 0 || !customerName || !customerPhone">
                 <i class="bi bi-check-circle"></i> ยืนยันสั่งซื้อ
@@ -121,7 +121,11 @@
 
     @if (cart.length > 0) {
     <div>
-      <div class="cart-items" style="max-height: 300px; overflow-y: auto;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="h6 mb-0">ยอดรวม</span>
+        <span class="h4 mb-0 text-primary fw-bold">฿{{getTotal()}}</span>
+      </div>
+      <div class="cart-items pe-2 border-top pt-3 mt-3" style="max-height: 300px; overflow-y: auto;">
         @for (item of cart; track item) {
         <app-cart-item-component [item]="item" (removeItem)="removeFromCart(item.id)"
           (updateQuantity)="updateQty(item.id, $event.change)">
@@ -142,10 +146,6 @@
       </div>
       <!-- Total and Submit -->
       <div class="border-top pt-3 mt-3">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <span class="h6 mb-0">ยอดรวม</span>
-          <span class="h4 mb-0 text-primary fw-bold">฿{{getTotal()}}</span>
-        </div>
         <button class="btn btn-success btn-lg w-100" (click)="submitOrder()"
           [disabled]="cart.length === 0 || !customerName || !customerPhone">
           <i class="bi bi-check-circle"></i> ยืนยันสั่งซื้อ

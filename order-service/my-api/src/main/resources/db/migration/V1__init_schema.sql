@@ -25,6 +25,7 @@
         id bigint not null auto_increment,
         updated_at datetime(6),
         span_id varchar(50),
+        slip_id varchar(50) not null,
         status enum ('CANCELLED','COMPLETED','CONFIRMED','COOKING','DELIVERING','PENDING') not null,
         primary key (id)
     ) engine=InnoDB;

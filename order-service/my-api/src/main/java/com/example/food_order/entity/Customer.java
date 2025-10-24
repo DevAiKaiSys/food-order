@@ -5,7 +5,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "customers")
@@ -23,8 +23,8 @@ public class Customer {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     @UpdateTimestamp
-    private OffsetDateTime updatedAt;
+    private ZonedDateTime updatedAt;
 }
