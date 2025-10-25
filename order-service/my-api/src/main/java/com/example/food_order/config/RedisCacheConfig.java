@@ -17,11 +17,10 @@ public class RedisCacheConfig {
 
     @Bean
     public RedisCacheConfiguration redisCacheConfiguration() {
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
         return RedisCacheConfiguration.defaultCacheConfig()
                 .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(
-                                new GenericJackson2JsonRedisSerializer()
-                        )
+                        RedisSerializationContext.SerializationPair.fromSerializer(serializer)
                 );
     }
 

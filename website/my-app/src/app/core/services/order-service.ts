@@ -73,8 +73,8 @@ export class OrderService {
         this.paginationSubject.next({
           totalPages: data.total_pages || 0,
           totalItems: data.total_elements || 0,
-          currentPage: (data.number || 0) + 1,
-          pageSize: data.size || size
+          currentPage: (data.page_number || 0) + 1,
+          pageSize: data.page_size || size
         });
 
         this.loadingSubject.next(false);

@@ -5,6 +5,7 @@ import com.example.food_order.dto.request.OrderItemRequest;
 import com.example.food_order.dto.request.UpdateOrderStatusRequest;
 import com.example.food_order.dto.response.OrderDetailResponse;
 import com.example.food_order.dto.response.OrderResponse;
+import com.example.food_order.dto.response.PageResponse;
 import com.example.food_order.entity.Customer;
 import com.example.food_order.entity.Order;
 import com.example.food_order.entity.OrderItem;
@@ -19,7 +20,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +28,8 @@ import java.math.BigDecimal;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.example.food_order.util.DateTimeUtil.MY_TIMEZONE;
 
@@ -128,7 +128,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "orders", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #searchId")
-    public Page<OrderResponse> searchOrders(Pageable pageable, String searchId) {
+    public PageResponse<OrderResponse> searchOrders(Pageable pageable, String searchId) {
         if (searchId != null) {
             log.info("Searching orders with searchId: {}", searchId);
         }
@@ -140,11 +140,20 @@ public class OrderServiceImpl implements OrderService {
             orderPage = orderRepository.findAllByOrderByStatusAscCreatedAtDesc(pageable);
         }
 
-        List<OrderResponse> orderResponses = orderPage.getContent().stream()
-                .map(OrderResponse::fromEntity)
-                .collect(Collectors.toList());
+        List<OrderResponse> orderResponses = new ArrayList<>(
+                orderPage.getContent().stream()
+                        .map(OrderResponse::fromEntity)
+                        .toList()
+        );
 
-        return new PageImpl<>(orderResponses, pageable, orderPage.getTotalElements());
+        return PageResponse.<OrderResponse>builder()
+                .content(orderResponses)
+                .pageNumber(orderPage.getNumber())
+                .pageSize(orderPage.getSize())
+                .totalElements(orderPage.getTotalElements())
+                .totalPages(orderPage.getTotalPages())
+                .isLast(orderPage.isLast())
+                .build();
     }
 
     @Override

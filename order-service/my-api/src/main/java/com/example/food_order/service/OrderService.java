@@ -4,14 +4,14 @@ import com.example.food_order.dto.request.CreateOrderRequest;
 import com.example.food_order.dto.request.UpdateOrderStatusRequest;
 import com.example.food_order.dto.response.OrderDetailResponse;
 import com.example.food_order.dto.response.OrderResponse;
-import org.springframework.data.domain.Page;
+import com.example.food_order.dto.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 
 public interface OrderService {
 
     OrderDetailResponse createOrder(CreateOrderRequest request);
 
-    Page<OrderResponse> searchOrders(Pageable pageable, String searchId);
+    PageResponse<OrderResponse> searchOrders(Pageable pageable, String searchId);
 
     OrderDetailResponse getOrderDetails(Long orderId);
 
