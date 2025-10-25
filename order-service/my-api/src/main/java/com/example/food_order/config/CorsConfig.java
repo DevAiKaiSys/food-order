@@ -19,7 +19,7 @@ public class CorsConfig {
 
         // อนุญาต origin จาก Angular (เปลี่ยน port ตามที่คุณใช้)
         config.addAllowedOrigin("http://localhost:4200");
-        config.addAllowedOrigin("http://localhost:80");
+        config.addAllowedOrigin("http://localhost");
 
         // อนุญาตทุก header
         config.addAllowedHeader("*");

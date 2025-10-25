@@ -47,7 +47,6 @@
 
     <!-- Orders Table (Desktop) -->
     <div class="card shadow-sm d-none d-md-block">
-        <!-- Loading -->
         @if (isLoading) {
         <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
@@ -56,7 +55,6 @@
             <p class="text-muted mt-3">กำลังโหลดข้อมูล...</p>
         </div>
         } @else if (hasError) {
-        <!-- Error -->
         <div class="text-center py-5">
             <div class="text-danger mb-3">
                 <i class="bi bi-exclamation-triangle-fill fs-1"></i>
@@ -83,7 +81,7 @@
                 <tbody>
                     @if (orders.length === 0) {
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
+                        <td colspan="6" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                             ไม่พบข้อมูล
                         </td>
@@ -91,7 +89,12 @@
                     }
                     @for (order of orders; track order.id) {
                     <tr>
-                        <td>{{ order.slip_id }}</td>
+                        <td>
+                            <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold"
+                                (click)="viewOrderDetail(order.id)">
+                                {{ order.slip_id }}
+                            </a>
+                        </td>
                         <td>{{ order.customer_name || '-' }}</td>
                         <td class="text-end fw-bold text-primary">฿{{ order.total_amount | number:'1.2-2' }}</td>
                         <td class="text-center">
@@ -209,20 +212,23 @@
         </div>
         }
         @for (order of orders; track order.id) {
-        <div class="card shadow-sm mb-3">
+        <div class="card shadow-sm mb-3" (click)="viewOrderDetail(order.id)" style="cursor: pointer;">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <h6 class="mb-1">Order #{{order.id}}</h6>
+                        <h6 class="mb-1 text-primary">{{ order.slip_id }}</h6>
                         <p class="text-muted small mb-0">{{order.customer_name || 'ไม่ระบุชื่อ'}}</p>
                     </div>
                     <span class="badge bg-{{statusConfig[order.status].color}}">
                         {{statusConfig[order.status].label}}
                     </span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="small text-muted">{{order.item_count}} รายการ</span>
                     <span class="fw-bold text-primary">฿{{order.total_amount | number:'1.2-2'}}</span>
+                </div>
+                <div class="small text-muted">
+                    <i class="bi bi-clock"></i> {{ order.created_at | date:'short' }}
                 </div>
             </div>
         </div>
@@ -246,5 +252,141 @@
         </div>
         }
         }
+    </div>
+</div>
+
+<!-- Modal สำหรับแสดงรายละเอียด Order -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="orderDetailModalLabel">
+                    <i class="bi bi-receipt"></i> รายละเอียดออเดอร์
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (isLoadingDetail) {
+                <!-- Loading State -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-3">กำลังโหลดข้อมูล...</p>
+                </div>
+                } @else if (detailError) {
+                <!-- Error State -->
+                <div class="text-center py-5">
+                    <div class="text-danger mb-3">
+                        <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                    </div>
+                    <h5 class="text-danger">ไม่สามารถโหลดข้อมูลได้</h5>
+                    <p class="text-muted">กรุณาลองใหม่อีกครั้ง</p>
+                </div>
+                } @else if (selectedOrder) {
+                <!-- Order Detail Content -->
+
+                <!-- Order Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h4 class="text-primary mb-1">{{ selectedOrder.slip_id }}</h4>
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-clock"></i>
+                                    {{ selectedOrder.created_at | date:'medium' }}
+                                </p>
+                            </div>
+                            <div>
+                                <div>สถานะออเดอร์: </div>
+                                <span class="badge bg-{{statusConfig[selectedOrder.status].color}} fs-6 px-3 py-2">
+                                    <i class="bi bi-{{statusConfig[selectedOrder.status].icon}}"></i>
+                                    {{statusConfig[selectedOrder.status].label}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="card mb-3 border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">
+                            <i class="bi bi-person-fill text-primary"></i> ข้อมูลลูกค้า
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <small class="text-muted d-block">ชื่อ</small>
+                                <strong>{{ selectedOrder.customer.name }}</strong>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <small class="text-muted d-block">เบอร์โทร</small>
+                                <strong>{{ selectedOrder.customer.phone }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="mb-3">
+                    <h6 class="mb-3">
+                        <i class="bi bi-bag-fill text-primary"></i> รายการอาหาร
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>เมนู</th>
+                                    <th class="text-center">จำนวน</th>
+                                    <th class="text-end">ราคา/หน่วย</th>
+                                    <th class="text-end">ราคารวม</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (item of selectedOrder.items; track $index) {
+                                <tr>
+                                    <td>{{ item.menu_name }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">{{ item.quantity }}</span>
+                                    </td>
+                                    <td class="text-end">฿{{ item.price | number:'1.2-2' }}</td>
+                                    <td class="text-end fw-bold text-primary">฿{{ item.total | number:'1.2-2' }}</td>
+                                </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">ยอดรวมทั้งหมด:</td>
+                                    <td class="text-end fw-bold text-primary fs-5">
+                                        ฿{{ selectedOrder.total_amount | number:'1.2-2' }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">
+                            <i class="bi bi-clock-history text-primary"></i> ประวัติ
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <small class="text-muted d-block">สร้างเมื่อ</small>
+                                <strong>{{ selectedOrder.created_at | date:'medium' }}</strong>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <small class="text-muted d-block">อัพเดทล่าสุด</small>
+                                <strong>{{ selectedOrder.updated_at | date:'medium' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
     </div>
 </div>

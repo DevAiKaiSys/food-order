@@ -36,6 +36,11 @@ public class OrderController {
         return orderService.searchOrders(searchId, pageable);
     }
 
+    @GetMapping("/{orderId}")
+    public OrderDetailResponse getOrderDetails(@PathVariable Long orderId) {
+        return orderService.getOrderDetails(orderId);
+    }
+
     @PatchMapping("/{orderId}/status")
     public OrderDetailResponse updateOrderStatus(
             @PathVariable Long orderId,

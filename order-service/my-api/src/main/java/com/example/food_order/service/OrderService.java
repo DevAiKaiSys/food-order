@@ -137,6 +137,14 @@ public class OrderService {
         return new PageImpl<>(orderResponses, pageable, orderPage.getTotalElements());
     }
 
+    @Transactional(readOnly = true)
+    public OrderDetailResponse getOrderDetails(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        return OrderDetailResponse.fromEntity(order);
+    }
+
     @Transactional
     public OrderDetailResponse updateOrderStatus(Long orderId, UpdateOrderStatusRequest request) {
         log.info("Updating order status for orderId: {} to status: {}", orderId, request.getStatus());

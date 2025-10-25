@@ -33,7 +33,7 @@ export class OrderService {
     this.errorSubject.next(null);
 
     let params = new HttpParams()
-      .set('page', (page - 1).toString()) // backend ใช้ index เริ่มที่ 0
+      .set('page', (page - 1).toString())
       .set('size', size.toString());
 
     if (searchId && searchId.trim() !== '') {
@@ -70,29 +70,33 @@ export class OrderService {
 
         this.ordersSubject.next(data.content || []);
 
-        // pagination
         this.paginationSubject.next({
           totalPages: data.total_pages || 0,
           totalItems: data.total_elements || 0,
-          currentPage: (data.number || 0) + 1, // +1 เพราะ backend เริ่มที่ 0
+          currentPage: (data.number || 0) + 1,
           pageSize: data.size || size
         });
 
         this.loadingSubject.next(false);
         this.errorSubject.next(null);
       },
-      error: () => {
-        // จัดการใน catchError แล้ว
-      }
+      error: () => { }
     });
   }
 
+  // เพิ่ม method สำหรับดึงรายละเอียด order
+  getOrderDetail(orderId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${orderId}`).pipe(
+      catchError(error => {
+        console.error('Error loading order detail:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 
   createOrder(order: Partial<Order>): Observable<any> {
     return this.http.post<any>(this.apiUrl, order).pipe(
-      tap(() => {
-        // this.loadOrders()
-      }),
+      tap(() => { }),
       catchError(error => {
         console.error('Error creating order:', error);
         return throwError(() => error);

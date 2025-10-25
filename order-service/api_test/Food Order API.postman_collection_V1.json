@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "f8f3bcf6-a6f6-453a-9189-8cbb86511d28",
+		"_postman_id": "43a24e99-e6fa-4fea-ab32-2cbb1a858107",
 		"name": "Food Order API",
 		"description": "Postman collection สำหรับทดสอบ Order API ให้ตรงกับ Spring Validation",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -105,6 +105,32 @@
 							"key": "searchId",
 							"value": ""
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Order by ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/api/orders/{{orderId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"orders",
+						"{{orderId}}"
 					]
 				}
 			},

@@ -4,13 +4,19 @@
 
 ### website
 
+run for Production
+
 ```
 cd website/docker
 
-# Production
 docker compose up -d
+```
 
-# Development
+run for Development
+
+```
+cd website/docker-development
+
 docker compose -f docker-compose.dev.yaml up -d
 ```
 

@@ -22,6 +22,28 @@ export interface Order {
   details?: CartItem[];
 }
 
+export interface OrderDetail {
+  id: number;
+  slip_id: string;
+  customer: {
+    id: number;
+    name: string;
+    phone: string;
+  };
+  status: OrderStatus;
+  total_amount: number;
+  items: OrderItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderItem {
+  menu_name: string;
+  quantity: number;
+  price: number;
+  total: number;
+}
+
 export type OrderStatus =
   | 'PENDING'
   | 'CONFIRMED'

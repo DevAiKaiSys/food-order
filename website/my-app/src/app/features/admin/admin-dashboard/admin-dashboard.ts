@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { debounceTime, Subject, Subscription } from 'rxjs';
 import { OrderService } from '../../../core/services/order-service';
-import { Order, OrderStatus, StatusConfig } from '../../../shared/models/order.model';
+import { Order, OrderDetail, OrderStatus, StatusConfig } from '../../../shared/models/order.model';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '../../../core/services/toast-service';
@@ -25,6 +25,11 @@ export class AdminDashboard implements OnInit, OnDestroy {
   errorMessage = '';
   isOnline = true;
 
+  // สำหรับ modal
+  selectedOrder: OrderDetail | null = null;
+  isLoadingDetail = false;
+  detailError = false;
+
   orderStatuses: OrderStatus[] = ['PENDING', 'CONFIRMED', 'COOKING', 'DELIVERING', 'COMPLETED', 'CANCELLED'];
   statusConfig: { [key in OrderStatus]: StatusConfig } = {
     PENDING: { label: 'รอดำเนินการ', color: 'warning', icon: 'clock', nextStatus: 'CONFIRMED' },
@@ -47,13 +52,12 @@ export class AdminDashboard implements OnInit, OnDestroy {
   Math = Math;
 
   ngOnInit() {
-    // Subscribe to searchSubject with debounceTime and switchMap
     this.subscriptions.push(
       this.searchSubject.pipe(
-        debounceTime(300)  // รอ 300ms หลังจากหยุดพิมพ์
+        debounceTime(300)
       ).subscribe((searchId: string) => {
         console.log('Searching for:', searchId);
-        this.currentPage = 1;  // รีเซ็ตหน้าเป็นหน้าแรกทุกครั้งที่ทำการค้นหา
+        this.currentPage = 1;
         this.searchId = searchId;
         this.loadOrders();
       })
@@ -144,6 +148,33 @@ export class AdminDashboard implements OnInit, OnDestroy {
     return pages;
   }
 
+  // เปิด modal และโหลดรายละเอียด
+  viewOrderDetail(orderId: number) {
+    this.isLoadingDetail = true;
+    this.detailError = false;
+    this.selectedOrder = null;
+
+    this.orderService.getOrderDetail(orderId).subscribe({
+      next: (response) => {
+        this.selectedOrder = response.data;
+        this.isLoadingDetail = false;
+
+        // เปิด modal (ใช้ Bootstrap 5 Modal)
+        const modalElement = document.getElementById('orderDetailModal');
+        if (modalElement) {
+          const modal = new (window as any).bootstrap.Modal(modalElement);
+          modal.show();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading order detail:', error);
+        this.detailError = true;
+        this.isLoadingDetail = false;
+        this.toastService.show('ไม่สามารถโหลดรายละเอียดออเดอร์ได้', 'error');
+      }
+    });
+  }
+
   changeStatus(orderId: number, newStatus: OrderStatus) {
     this.orderService.updateOrderStatus(orderId, newStatus).subscribe({
       next: () => {
@@ -151,7 +182,6 @@ export class AdminDashboard implements OnInit, OnDestroy {
           `เปลี่ยนสถานะเป็น ${this.statusConfig[newStatus].label} สำเร็จ`,
           'success'
         );
-        // Reload orders from API after status change
         this.loadOrders();
       },
       error: (error) => {

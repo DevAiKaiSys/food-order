@@ -2,7 +2,7 @@ services:
   website:
     build:
       context: ../
-      dockerfile: docker/Dockerfile.dev
+      dockerfile: docker-development/Dockerfile.dev
     container_name: website-dev
     ports:
       - "4200:4200"

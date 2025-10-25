@@ -1,74 +1,70 @@
-.table thead th {
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.875rem;
-    letter-spacing: 0.5px;
+/* Modal Styling */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
-.badge {
-    padding: 0.5rem 0.75rem;
-    font-weight: 500;
+.modal-header {
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+    padding: 1.5rem;
 }
 
-.btn-group-sm .btn {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.75rem;
+.modal-body {
+    padding: 1.5rem;
 }
 
-/* Loading Spinner */
-.spinner-border {
-    width: 3rem;
-    height: 3rem;
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0 0 12px 12px;
 }
 
-/* Smooth Transitions */
+/* Card Hover Effect */
 .card {
     transition: all 0.3s ease;
 }
 
-@media (max-width: 768px) {
-    .card {
-        margin-bottom: 1rem;
-    }
-
-    .btn-group {
-        width: 100%;
-    }
-
-    .btn-group .btn {
-        flex: 1;
-    }
+.d-md-none .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-.order-card {
-    border-left: 4px solid #0d6efd;
-    transition: all 0.3s ease;
+/* Table Link Styling */
+.table a {
+    transition: all 0.2s ease;
 }
 
-.order-card:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+.table a:hover {
+    text-decoration: underline !important;
 }
 
-/* Retry Button Animation */
-@keyframes pulse {
+/* Status Badge Sizing */
+.badge {
+    font-weight: 500;
+    padding: 0.35rem 0.65rem;
+}
 
-    0%,
-    100% {
-        opacity: 1;
+/* Button Group Equal Width */
+.btn-group-sm .btn {
+    min-width: 80px;
+}
+
+/* Responsive Table */
+@media (max-width: 767.98px) {
+    .table-responsive {
+        border-radius: 8px;
     }
 
-    50% {
-        opacity: 0.7;
+    .modal-dialog {
+        margin: 0.5rem;
     }
-}
-
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
 }
 
 .equal-btn {
-    min-width: 150px;
+    min-width: 150px !important;
     text-align: center;
     white-space: nowrap;
 }

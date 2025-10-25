@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(buildErrorResponse("MDB-404", ex.getMessage()));
+                .body(ApiResponse.error(ex.getMessage(), TracerUtil.getSpanId(tracer), "MDB-404"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -33,20 +33,12 @@ public class GlobalExceptionHandler {
                 .orElse("Validation failed");
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(buildErrorResponse("MDB-400", message));
+                .body(ApiResponse.error(message, TracerUtil.getSpanId(tracer), "MDB-400"));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneral(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(buildErrorResponse("MDB-500", "Internal server error"));
-    }
-
-    private ApiResponse<Void> buildErrorResponse(String code, String message) {
-        return ApiResponse.<Void>builder()
-                .statusCode(code)
-                .statusMsg(message)
-                .spanId(TracerUtil.getSpanId(tracer))
-                .build();
+                .body(ApiResponse.error("Internal server error", TracerUtil.getSpanId(tracer), "MDB-500"));
     }
 }
