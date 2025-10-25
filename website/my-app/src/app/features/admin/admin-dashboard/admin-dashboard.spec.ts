@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminDashboard } from './admin-dashboard';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideToastr } from 'ngx-toastr';
 
 describe('AdminDashboard', () => {
   let component: AdminDashboard;
@@ -11,7 +12,7 @@ describe('AdminDashboard', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AdminDashboard],
-      providers: [provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideToastr()]
     })
       .compileComponents();
 

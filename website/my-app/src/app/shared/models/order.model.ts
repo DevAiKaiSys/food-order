@@ -19,6 +19,7 @@ export interface Order {
   total_amount: number;
   status: OrderStatus;
   created_at: string;
+  updated_at: string;
   details?: CartItem[];
 }
 
@@ -44,13 +45,14 @@ export interface OrderItem {
   total: number;
 }
 
-export type OrderStatus =
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'COOKING'
-  | 'DELIVERING'
-  | 'COMPLETED'
-  | 'CANCELLED';
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  COOKING = 'COOKING',
+  DELIVERING = 'DELIVERING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
+}
 
 export interface StatusConfig {
   label: string;
@@ -58,3 +60,40 @@ export interface StatusConfig {
   icon: string;
   nextStatus?: OrderStatus;
 }
+
+export const STATUS_CONFIG: { [key in OrderStatus]: StatusConfig } = {
+  [OrderStatus.PENDING]: {
+    label: 'รอดำเนินการ',
+    color: 'warning',
+    icon: 'clock',
+    nextStatus: OrderStatus.CONFIRMED
+  },
+  [OrderStatus.CONFIRMED]: {
+    label: 'ยืนยันออเดอร์',
+    color: 'info',
+    icon: 'check-circle',
+    nextStatus: OrderStatus.COOKING
+  },
+  [OrderStatus.COOKING]: {
+    label: 'เริ่มทําอาหาร',
+    color: 'primary',
+    icon: 'fire',
+    nextStatus: OrderStatus.DELIVERING
+  },
+  [OrderStatus.DELIVERING]: {
+    label: 'กําลังจัดส่ง',
+    color: 'secondary',
+    icon: 'truck-front',
+    nextStatus: OrderStatus.COMPLETED
+  },
+  [OrderStatus.COMPLETED]: {
+    label: 'ออเดอร์เสร็จสิ้น',
+    color: 'success',
+    icon: 'check-circle-fill'
+  },
+  [OrderStatus.CANCELLED]: {
+    label: 'ยกเลิกออเดอร์',
+    color: 'danger',
+    icon: 'x-circle'
+  }
+};

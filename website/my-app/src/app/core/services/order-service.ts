@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, delay, Observable, of, tap, throwError } from 'rxjs';
 import { Order, OrderStatus } from '../../shared/models/order.model';
 import { environment } from '@environments/environment';
 
@@ -109,7 +109,31 @@ export class OrderService {
   }
 
   updateOrderStatus(orderId: number, status: OrderStatus): Observable<any> {
-    return this.http.patch<any>(`${this.apiUrl}/${orderId}/status`, { status }).pipe(
+    let endpoint = '';
+
+    // เลือก endpoint ตามสถานะ
+    switch (status) {
+      case OrderStatus.CONFIRMED:
+        endpoint = `${this.apiUrl}/${orderId}/confirm`;
+        break;
+      case OrderStatus.COOKING:
+        endpoint = `${this.apiUrl}/${orderId}/cook`;
+        break;
+      case OrderStatus.DELIVERING:
+        endpoint = `${this.apiUrl}/${orderId}/deliver`;
+        break;
+      case OrderStatus.COMPLETED:
+        endpoint = `${this.apiUrl}/${orderId}/complete`;
+        break;
+      case OrderStatus.CANCELLED:
+        endpoint = `${this.apiUrl}/${orderId}/cancel`;
+        break;
+      default:
+        return throwError(() => new Error('Invalid status'));
+    }
+
+    return this.http.post<any>(endpoint, {}).pipe(
+      delay(400), // จำลอง API delay
       catchError(error => {
         console.error('Error updating order status:', error);
         return throwError(() => error);

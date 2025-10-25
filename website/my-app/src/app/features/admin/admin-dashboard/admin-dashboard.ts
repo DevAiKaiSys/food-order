@@ -1,10 +1,17 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { debounceTime, Subject, Subscription } from 'rxjs';
 import { OrderService } from '../../../core/services/order-service';
-import { Order, OrderDetail, OrderStatus, StatusConfig } from '../../../shared/models/order.model';
+import { Order, OrderDetail, OrderStatus, STATUS_CONFIG, StatusConfig } from '../../../shared/models/order.model';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ToastService } from '../../../core/services/toast-service';
+import { ToastrService } from 'ngx-toastr';
+
+interface ActionButtonConfig {
+  status: OrderStatus;
+  label: string;
+  btnClass: string;
+  nextStatus?: OrderStatus;
+}
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -14,7 +21,7 @@ import { ToastService } from '../../../core/services/toast-service';
 })
 export class AdminDashboard implements OnInit, OnDestroy {
   private orderService = inject(OrderService);
-  private toastService = inject(ToastService);
+  private toastr = inject(ToastrService);
 
   searchId: string = '';
   searchSubject: Subject<string> = new Subject<string>();
@@ -26,19 +33,18 @@ export class AdminDashboard implements OnInit, OnDestroy {
   isOnline = true;
 
   // สำหรับ modal
-  selectedOrder: OrderDetail | null = null;
+  selectedOrder: Order | null = null;
+  selectedOrderDetail: OrderDetail | null = null;
   isLoadingDetail = false;
   detailError = false;
 
-  orderStatuses: OrderStatus[] = ['PENDING', 'CONFIRMED', 'COOKING', 'DELIVERING', 'COMPLETED', 'CANCELLED'];
-  statusConfig: { [key in OrderStatus]: StatusConfig } = {
-    PENDING: { label: 'รอดำเนินการ', color: 'warning', icon: 'clock', nextStatus: 'CONFIRMED' },
-    CONFIRMED: { label: 'ยืนยัน', color: 'info', icon: 'check-circle', nextStatus: 'COOKING' },
-    COOKING: { label: 'กำลังทำอาหาร', color: 'primary', icon: 'fire', nextStatus: 'DELIVERING' },
-    DELIVERING: { label: 'กำลังจัดส่ง', color: 'dark', icon: 'truck-front', nextStatus: 'COMPLETED' },
-    COMPLETED: { label: 'เสร็จสิ้น', color: 'success', icon: 'check-circle-fill' },
-    CANCELLED: { label: 'ยกเลิก', color: 'danger', icon: 'x-circle' }
-  };
+  // สำหรับ cancel confirmation
+  orderToCancel: Order | null = null;
+  isCancelling = false;
+
+  // ใช้ constant จาก model
+  statusConfig: { [key in OrderStatus]: StatusConfig } = STATUS_CONFIG;
+  OrderStatus = OrderStatus; // Expose enum to the template
 
   private subscriptions: Subscription[] = [];
 
@@ -50,6 +56,15 @@ export class AdminDashboard implements OnInit, OnDestroy {
   pageSizeOptions: number[] = [5, 10, 20, 50];
 
   Math = Math;
+  loadingStates: { [key: string]: boolean } = {};
+
+  actionButtons: ActionButtonConfig[] = [
+    { status: OrderStatus.CONFIRMED, label: 'ยืนยัน', btnClass: 'btn-info', nextStatus: OrderStatus.COOKING },
+    { status: OrderStatus.COOKING, label: 'เริ่มทำ', btnClass: 'btn-primary', nextStatus: OrderStatus.DELIVERING },
+    { status: OrderStatus.DELIVERING, label: 'จัดส่ง', btnClass: 'btn-secondary', nextStatus: OrderStatus.COMPLETED },
+    { status: OrderStatus.COMPLETED, label: 'เสร็จสิ้น', btnClass: 'btn-success' },
+    { status: OrderStatus.CANCELLED, label: 'ยกเลิก', btnClass: 'btn-danger' },
+  ];
 
   ngOnInit() {
     this.subscriptions.push(
@@ -149,14 +164,14 @@ export class AdminDashboard implements OnInit, OnDestroy {
   }
 
   // เปิด modal และโหลดรายละเอียด
-  viewOrderDetail(orderId: number) {
+  viewOrderDetail(order: Order) {
     this.isLoadingDetail = true;
     this.detailError = false;
-    this.selectedOrder = null;
+    this.selectedOrder = order;
 
-    this.orderService.getOrderDetail(orderId).subscribe({
+    this.orderService.getOrderDetail(order.id).subscribe({
       next: (response) => {
-        this.selectedOrder = response.data;
+        this.selectedOrderDetail = response.data;
         this.isLoadingDetail = false;
 
         // เปิด modal (ใช้ Bootstrap 5 Modal)
@@ -170,35 +185,124 @@ export class AdminDashboard implements OnInit, OnDestroy {
         console.error('Error loading order detail:', error);
         this.detailError = true;
         this.isLoadingDetail = false;
-        this.toastService.show('ไม่สามารถโหลดรายละเอียดออเดอร์ได้', 'error');
+        this.toastr.error("ไม่สามารถโหลดรายละเอียดออเดอร์ได้", 'error', { closeButton: true });
       }
     });
   }
 
-  changeStatus(orderId: number, newStatus: OrderStatus) {
-    this.orderService.updateOrderStatus(orderId, newStatus).subscribe({
-      next: () => {
-        this.toastService.show(
-          `เปลี่ยนสถานะเป็น ${this.statusConfig[newStatus].label} สำเร็จ`,
-          'success'
-        );
-        this.loadOrders();
-      },
-      error: (error) => {
-        console.error('Error updating order status:', error);
-        const errorMsg = error?.error?.message || 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ';
-        this.toastService.show(errorMsg, 'error');
-      }
-    });
-  }
+  isActionDisabled(order: Order, action: OrderStatus): boolean {
+    const current = order.status;
 
-  cancelOrder(orderId: number) {
-    const order = this.orders.find(o => o.id === orderId);
-    if (order?.status === 'COMPLETED') {
-      this.toastService.show('ไม่สามารถยกเลิกออเดอร์ที่เสร็จสิ้นแล้ว', 'error');
-      return;
+    if (action === OrderStatus.CANCELLED) {
+      // ห้ามยกเลิกถ้า Complete หรือ Cancelled ไปแล้ว
+      return current === OrderStatus.COMPLETED || current === OrderStatus.CANCELLED;
     }
 
-    this.changeStatus(orderId, 'CANCELLED');
+    // ตรวจสอบตามลำดับ
+    switch (action) {
+      case OrderStatus.CONFIRMED: return current !== OrderStatus.PENDING;
+      case OrderStatus.COOKING: return current !== OrderStatus.CONFIRMED;
+      case OrderStatus.DELIVERING: return current !== OrderStatus.COOKING;
+      case OrderStatus.COMPLETED: return current !== OrderStatus.DELIVERING;
+      default: return true; // ปุ่มอื่นๆ ที่ไม่รู้จัก
+    }
+  }
+
+  updateStatus(order: Order | OrderDetail, newStatus: OrderStatus): void {
+    const loadingKey = `${order.id}-${newStatus}`;
+    this.loadingStates[loadingKey] = true;
+
+    this.orderService.updateOrderStatus(order.id, newStatus).subscribe({
+      next: () => {
+        this.showUpdateStatusToast(order, newStatus);
+        this.loadingStates[loadingKey] = false;
+        this.loadOrders();
+
+        if (newStatus === OrderStatus.CONFIRMED || newStatus === OrderStatus.CANCELLED) {
+          this.closeModal();
+        }
+      },
+      error: (err) => {
+        const errorMsg = err.error?.message || err.message || 'ไม่สามารถอัปเดตสถานะได้';
+        this.toastr.error(errorMsg, 'อัปเดตล้มเหลว', { closeButton: true });
+        this.loadingStates[loadingKey] = false;
+      }
+    });
+  }
+
+  private showUpdateStatusToast(order: Order | OrderDetail, newStatus: OrderStatus): void {
+    const statusConfig = this.statusConfig[newStatus];
+    const message = `ออเดอร์ #${order.slip_id} เปลี่ยนเป็น ${statusConfig.label}`;
+    const title = 'อัปเดตสำเร็จ';
+
+    if (newStatus === OrderStatus.COMPLETED) {
+      this.toastr.success(message, title, { closeButton: true });
+    } else if (newStatus === OrderStatus.CANCELLED) {
+      this.toastr.info(message, title, { closeButton: true });
+    }
+  }
+
+  closeModal() {
+    const modalElement = document.getElementById('orderDetailModal');
+    if (modalElement) {
+      const modal = (window as any).bootstrap.Modal.getInstance(modalElement);
+      if (modal) {
+        modal.hide();
+      }
+    }
+  }
+
+  isActionLoading(order: Order, action: OrderStatus): boolean {
+    return this.loadingStates[`${order.id}-${action}`] || false;
+  }
+
+  handleStatusAction(order: Order, newStatus: OrderStatus): void {
+    if (newStatus === OrderStatus.CANCELLED) {
+      // แสดง modal ยืนยันการยกเลิก
+      this.orderToCancel = order;
+      const modalElement = document.getElementById('cancelConfirmModal');
+      if (modalElement) {
+        const modal = new (window as any).bootstrap.Modal(modalElement);
+        modal.show();
+      }
+    } else if (newStatus === OrderStatus.CONFIRMED) {
+      // แสดง modal รายละเอียดพร้อมปุ่มยืนยัน
+      this.viewOrderDetail(order);
+    } else {
+      // อัปเดตสถานะปกติ
+      this.updateStatus(order, newStatus);
+    }
+  }
+
+  confirmCancelOrder(): void {
+    if (!this.orderToCancel) return;
+
+    this.isCancelling = true;
+    const order = this.orderToCancel;
+
+    this.orderService.updateOrderStatus(order.id, OrderStatus.CANCELLED).subscribe({
+      next: () => {
+        this.showUpdateStatusToast(order, OrderStatus.CANCELLED);
+        this.isCancelling = false;
+        this.orderToCancel = null;
+        this.loadOrders();
+        this.closeCancelModal();
+      },
+      error: (err) => {
+        const errorMsg = err.error?.message || err.message || 'ไม่สามารถยกเลิกออเดอร์ได้';
+        this.toastr.error(errorMsg, 'อัปเดตล้มเหลว', { closeButton: true });
+        this.isCancelling = false;
+      }
+    });
+  }
+
+  closeCancelModal(): void {
+    const modalElement = document.getElementById('cancelConfirmModal');
+    if (modalElement) {
+      const modal = (window as any).bootstrap.Modal.getInstance(modalElement);
+      if (modal) {
+        modal.hide();
+      }
+    }
   }
 }

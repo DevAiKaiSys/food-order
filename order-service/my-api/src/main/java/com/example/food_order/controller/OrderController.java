@@ -36,9 +36,40 @@ public class OrderController {
         return orderService.searchOrders(searchId, pageable);
     }
 
+    // 3. รายละเอียดออเดอร์
     @GetMapping("/{orderId}")
     public OrderDetailResponse getOrderDetails(@PathVariable Long orderId) {
         return orderService.getOrderDetails(orderId);
+    }
+
+    // 4. ยืนยันออเดอร์
+    @PostMapping("/{orderId}/confirm")
+    public OrderDetailResponse confirmOrder(@PathVariable Long orderId) {
+        return orderService.confirmOrder(orderId);
+    }
+
+    // 5. เริ่มทำอาหาร
+    @PostMapping("/{orderId}/cook")
+    public OrderDetailResponse cookOrder(@PathVariable Long orderId) {
+        return orderService.startCooking(orderId);
+    }
+
+    // 6. กำลังจัดส่ง
+    @PostMapping("/{orderId}/deliver")
+    public OrderDetailResponse deliverOrder(@PathVariable Long orderId) {
+        return orderService.startDelivering(orderId);
+    }
+
+    // 7. เสร็จสิ้น
+    @PostMapping("/{orderId}/complete")
+    public OrderDetailResponse completeOrder(@PathVariable Long orderId) {
+        return orderService.completeOrder(orderId);
+    }
+
+    // 8. ยกเลิก
+    @PostMapping("/{orderId}/cancel")
+    public OrderDetailResponse cancelOrder(@PathVariable Long orderId) {
+        return orderService.cancelOrder(orderId);
     }
 
     @PatchMapping("/{orderId}/status")

@@ -74,14 +74,15 @@
                         <th>ลูกค้า</th>
                         <th class="text-end">ยอดรวม</th>
                         <th class="text-center">สถานะ</th>
-                        <th>เวลา</th>
+                        <th class="text-center">เริ่มสั่งออเดอร์</th>
+                        <th class="text-center">อัปเดตล่าสุด</th>
                         <th class="text-center">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (orders.length === 0) {
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-5">
+                        <td colspan="7" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                             ไม่พบข้อมูล
                         </td>
@@ -91,7 +92,7 @@
                     <tr>
                         <td>
                             <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold"
-                                (click)="viewOrderDetail(order.id)">
+                                (click)="viewOrderDetail(order)">
                                 {{ order.slip_id }}
                             </a>
                         </td>
@@ -104,19 +105,20 @@
                             </span>
                         </td>
                         <td class="small text-muted">{{ order.created_at | date:'short' }}</td>
+                        <td class="small text-muted">{{ order.updated_at | date:'short' }}</td>
                         <td class="text-center">
-                            <div class="btn-group btn-group-sm">
-                                @if (statusConfig[order.status].nextStatus) {
-                                <button
-                                    class="btn btn-outline-{{statusConfig[statusConfig[order.status].nextStatus!].color}} equal-btn"
-                                    (click)="changeStatus(order.id, statusConfig[order.status].nextStatus!)">
-                                    <i class="bi bi-{{statusConfig[statusConfig[order.status].nextStatus!].icon}}"></i>
-                                    {{statusConfig[statusConfig[order.status].nextStatus!].label}}
-                                </button>
-                                }
-                                @if (order.status !== 'COMPLETED' && order.status !== 'CANCELLED') {
-                                <button class="btn btn-outline-danger" (click)="cancelOrder(order.id)">
-                                    <i class="bi bi-x"></i> ยกเลิก
+                            <div class="btn-group btn-group-sm" role="group">
+                                @for (btn of actionButtons; track btn.status) {
+                                <button class="btn btn-sm"
+                                    [ngClass]="isActionDisabled(order, btn.status) ? 'btn-outline-secondary' : btn.btnClass"
+                                    [disabled]="isActionDisabled(order, btn.status) || isActionLoading(order, btn.status)"
+                                    (click)="handleStatusAction(order, btn.status)">
+                                    @if (isActionLoading(order, btn.status)) {
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                    } @else {
+                                    <i class="bi bi-{{statusConfig[btn.status].icon}}"></i>
+                                    }
+                                    {{ btn.label }}
                                 </button>
                                 }
                             </div>
@@ -212,7 +214,7 @@
         </div>
         }
         @for (order of orders; track order.id) {
-        <div class="card shadow-sm mb-3" (click)="viewOrderDetail(order.id)" style="cursor: pointer;">
+        <div class="card shadow-sm mb-3" (click)="viewOrderDetail(order)" style="cursor: pointer;">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
@@ -228,7 +230,8 @@
                     <span class="fw-bold text-primary">฿{{order.total_amount | number:'1.2-2'}}</span>
                 </div>
                 <div class="small text-muted">
-                    <i class="bi bi-clock"></i> {{ order.created_at | date:'short' }}
+                    <div><i class="bi bi-clock"></i> สร้าง: {{ order.created_at | date:'short' }}</div>
+                    <div><i class="bi bi-arrow-clockwise"></i> อัปเดต: {{ order.updated_at | date:'short' }}</div>
                 </div>
             </div>
         </div>
@@ -284,7 +287,7 @@
                     <h5 class="text-danger">ไม่สามารถโหลดข้อมูลได้</h5>
                     <p class="text-muted">กรุณาลองใหม่อีกครั้ง</p>
                 </div>
-                } @else if (selectedOrder) {
+                } @else if (selectedOrder && selectedOrderDetail) {
                 <!-- Order Detail Content -->
 
                 <!-- Order Header -->
@@ -318,11 +321,11 @@
                         <div class="row">
                             <div class="col-md-6 mb-2">
                                 <small class="text-muted d-block">ชื่อ</small>
-                                <strong>{{ selectedOrder.customer.name }}</strong>
+                                <strong>{{ selectedOrderDetail.customer.name }}</strong>
                             </div>
                             <div class="col-md-6 mb-2">
                                 <small class="text-muted d-block">เบอร์โทร</small>
-                                <strong>{{ selectedOrder.customer.phone }}</strong>
+                                <strong>{{ selectedOrderDetail.customer.phone }}</strong>
                             </div>
                         </div>
                     </div>
@@ -344,7 +347,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (item of selectedOrder.items; track $index) {
+                                @for (item of selectedOrderDetail.items; track $index) {
                                 <tr>
                                     <td>{{ item.menu_name }}</td>
                                     <td class="text-center">
@@ -376,16 +379,90 @@
                         <div class="row">
                             <div class="col-md-6 mb-2">
                                 <small class="text-muted d-block">สร้างเมื่อ</small>
-                                <strong>{{ selectedOrder.created_at | date:'medium' }}</strong>
+                                <strong>{{ selectedOrderDetail.created_at | date:'medium' }}</strong>
                             </div>
                             <div class="col-md-6 mb-2">
                                 <small class="text-muted d-block">อัพเดทล่าสุด</small>
-                                <strong>{{ selectedOrder.updated_at | date:'medium' }}</strong>
+                                <strong>{{ selectedOrderDetail.updated_at | date:'medium' }}</strong>
                             </div>
                         </div>
                     </div>
                 </div>
                 }
+            </div>
+            @if (selectedOrder && selectedOrder.status === OrderStatus.PENDING) {
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary equal-btn" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> ปิด
+                </button>
+                <button type="button" class="btn btn-info equal-btn"
+                    [disabled]="isActionLoading(selectedOrder, OrderStatus.CONFIRMED)"
+                    (click)="updateStatus(selectedOrder, OrderStatus.CONFIRMED)">
+                    @if (isActionLoading(selectedOrder, OrderStatus.COOKING)) {
+                    <span class="spinner-border spinner-border-sm"></span>
+                    } @else {
+                    <i class="bi bi-check-circle"></i>
+                    }
+                    ยืนยันออเดอร์
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal ยืนยันการยกเลิกออเดอร์ -->
+<div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-labelledby="cancelConfirmModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="cancelConfirmModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill"></i> ยืนยันการยกเลิกออเดอร์
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (orderToCancel) {
+                <div class="text-center mb-3">
+                    <i class="bi bi-exclamation-circle text-warning fs-1"></i>
+                </div>
+                <p class="text-center mb-3">คุณต้องการยกเลิกออเดอร์นี้หรือไม่?</p>
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>Order ID:</strong>
+                            <span class="text-primary">{{ orderToCancel.slip_id }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>ลูกค้า:</strong>
+                            <span>{{ orderToCancel.customer_name || '-' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>ยอดรวม:</strong>
+                            <span class="text-primary fw-bold">฿{{ orderToCancel.total_amount | number:'1.2-2' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-danger small text-center mt-3 mb-0">
+                    <i class="bi bi-info-circle"></i> การยกเลิกนี้ไม่สามารถย้อนกลับได้
+                </p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary equal-btn" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> ยกเลิก
+                </button>
+                <button type="button" class="btn btn-danger equal-btn" [disabled]="isCancelling"
+                    (click)="confirmCancelOrder()">
+                    @if (isCancelling) {
+                    <span class="spinner-border spinner-border-sm"></span>
+                    } @else {
+                    <i class="bi bi-trash"></i>
+                    }
+                    ยืนยันยกเลิกออเดอร์
+                </button>
             </div>
         </div>
     </div>
