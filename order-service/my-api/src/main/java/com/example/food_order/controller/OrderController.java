@@ -33,7 +33,7 @@ public class OrderController {
             Pageable pageable,  // การแบ่งหน้า
             @RequestParam(required = false) String searchId // ค่าพารามิเตอร์ searchId
     ) {
-        return orderService.searchOrders(searchId, pageable);
+        return orderService.searchOrders(pageable, searchId);
     }
 
     // 3. รายละเอียดออเดอร์

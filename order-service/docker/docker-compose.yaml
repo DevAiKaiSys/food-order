@@ -15,6 +15,7 @@ services:
       SPRING_FLYWAY_LOCATIONS: classpath:db/migration
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: true
       SPRING_FLYWAY_VALIDATE_ON_MIGRATE: false
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_PROFILES_ACTIVE: docker
     command: >
       /bin/bash -c "
@@ -23,7 +24,7 @@ services:
         wget https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-amd64-v0.6.1.tar.gz && 
         tar -xzvf dockerize-linux-amd64-v0.6.1.tar.gz && 
         mv dockerize /usr/local/bin/ && 
-        dockerize -wait tcp://mysql:3306 -timeout 60s && 
+        dockerize -wait tcp://mysql:3306 -wait tcp://redis:6379 -timeout 60s && 
         java -jar /app/app.jar
       "
 
@@ -38,6 +39,16 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
       
 volumes:
   mysql_data:
+  redis_data:

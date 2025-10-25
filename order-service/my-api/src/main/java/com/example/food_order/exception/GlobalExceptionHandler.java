@@ -23,6 +23,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), TracerUtil.getSpanId(tracer), "MDB-404"));
     }
 
+    @ExceptionHandler(InvalidStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidStatusTransition(InvalidStateException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage(), TracerUtil.getSpanId(tracer), "MDB-400"));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult()

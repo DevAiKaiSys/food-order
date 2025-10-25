@@ -15,6 +15,9 @@ import com.example.food_order.repository.CustomerRepository;
 import com.example.food_order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +43,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "orders", allEntries = true)
     public OrderDetailResponse createOrder(CreateOrderRequest request) {
         log.info("Creating new order for customer: {} phone: {}", request.getCustomerName(), request.getPhone());
 
@@ -74,6 +78,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void addOrderItemsFromRequest(Order order, List<OrderItemRequest> itemRequests) {
+        if (itemRequests == null || itemRequests.isEmpty()) {
+            throw new IllegalArgumentException("Order must have at least one item.");
+        }
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (OrderItemRequest itemReq : itemRequests) {
             OrderItem orderItem = OrderItem.builder()
@@ -120,8 +127,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderResponse> searchOrders(String searchId, Pageable pageable) {
-        log.info("Searching orders with searchId: {}", searchId);
+    @Cacheable(value = "orders", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #searchId")
+    public Page<OrderResponse> searchOrders(Pageable pageable, String searchId) {
+        if (searchId != null) {
+            log.info("Searching orders with searchId: {}", searchId);
+        }
 
         Page<Order> orderPage;
         if (searchId != null && !searchId.isEmpty()) {
@@ -147,36 +157,42 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    @CachePut(value = "orders", key = "#orderId")
     public OrderDetailResponse confirmOrder(Long orderId) {
         return updateStatus(orderId, OrderStatus.CONFIRMED);
     }
 
     @Override
     @Transactional
+    @CachePut(value = "orders", key = "#orderId")
     public OrderDetailResponse startCooking(Long orderId) {
         return updateStatus(orderId, OrderStatus.COOKING);
     }
 
     @Override
     @Transactional
+    @CachePut(value = "orders", key = "#orderId")
     public OrderDetailResponse startDelivering(Long orderId) {
         return updateStatus(orderId, OrderStatus.DELIVERING);
     }
 
     @Override
     @Transactional
+    @CachePut(value = "orders", key = "#orderId")
     public OrderDetailResponse completeOrder(Long orderId) {
         return updateStatus(orderId, OrderStatus.COMPLETED);
     }
 
     @Override
     @Transactional
+    @CachePut(value = "orders", key = "#orderId")
     public OrderDetailResponse cancelOrder(Long orderId) {
         return updateStatus(orderId, OrderStatus.CANCELLED);
     }
 
     @Override
     @Transactional
+    @CachePut(value = "orders", key = "#orderId")
     public OrderDetailResponse updateOrderStatus(Long orderId, UpdateOrderStatusRequest request) {
         return updateStatus(orderId, request.getStatus());
     }
@@ -190,7 +206,7 @@ public class OrderServiceImpl implements OrderService {
         OrderStatus currentStatus = order.getStatus();
         if (!currentStatus.canTransitionTo(newStatus)) {
             throw new InvalidStateException(
-                    String.format("Cannot transition from %s to %s", currentStatus, newStatus)
+                    String.format("Cannot transition order status from %s to %s", currentStatus, newStatus)
             );
         }
 
