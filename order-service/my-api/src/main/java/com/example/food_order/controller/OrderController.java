@@ -31,9 +31,10 @@ public class OrderController {
     @GetMapping
     public PageResponse<OrderResponse> searchOrders(
             Pageable pageable,  // การแบ่งหน้า
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) String searchId // ค่าพารามิเตอร์ searchId
     ) {
-        return orderService.searchOrders(pageable, searchId);
+        return orderService.searchOrders(pageable, status, searchId);
     }
 
     // 3. รายละเอียดออเดอร์

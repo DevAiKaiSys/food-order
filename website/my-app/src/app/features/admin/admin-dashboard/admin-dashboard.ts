@@ -13,6 +13,8 @@ interface ActionButtonConfig {
   nextStatus?: OrderStatus;
 }
 
+type FilterStatus = OrderStatus | 'ALL';
+
 @Component({
   selector: 'app-admin-dashboard',
   imports: [FormsModule, CommonModule],
@@ -22,6 +24,8 @@ interface ActionButtonConfig {
 export class AdminDashboard implements OnInit, OnDestroy {
   private orderService = inject(OrderService);
   private toastr = inject(ToastrService);
+
+  filterStatus: FilterStatus = 'ALL';
 
   searchId: string = '';
   searchSubject: Subject<string> = new Subject<string>();
@@ -66,6 +70,16 @@ export class AdminDashboard implements OnInit, OnDestroy {
     { status: OrderStatus.CANCELLED, label: 'ยกเลิก', btnClass: 'btn-danger' },
   ];
 
+  filterStatusOptions: { value: FilterStatus; label: string }[] = [
+    { value: 'ALL', label: 'ทั้งหมด' },
+    { value: OrderStatus.PENDING, label: 'รอยืนยัน' },
+    { value: OrderStatus.CONFIRMED, label: 'ยืนยันแล้ว' },
+    { value: OrderStatus.COOKING, label: 'กำลังทำ' },
+    { value: OrderStatus.DELIVERING, label: 'กำลังจัดส่ง' },
+    { value: OrderStatus.COMPLETED, label: 'เสร็จสิ้น' },
+    { value: OrderStatus.CANCELLED, label: 'ยกเลิก' },
+  ];
+
   ngOnInit() {
     this.subscriptions.push(
       this.searchSubject.pipe(
@@ -107,7 +121,9 @@ export class AdminDashboard implements OnInit, OnDestroy {
       this.errorMessage = 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อของคุณ';
       return;
     }
-    this.orderService.loadOrders(this.currentPage, this.itemsPerPage, this.searchId);
+
+    const statusParam = this.filterStatus !== 'ALL' ? this.filterStatus : undefined;
+    this.orderService.loadOrders(this.currentPage, this.itemsPerPage, statusParam, this.searchId);
   }
 
   retryLoadOrders() {
@@ -117,6 +133,11 @@ export class AdminDashboard implements OnInit, OnDestroy {
 
   onSearchChange(): void {
     this.searchSubject.next(this.searchId);
+  }
+
+  onStatusFilterChange(): void {
+    this.currentPage = 1;
+    this.loadOrders();
   }
 
   onPageSizeChange() {

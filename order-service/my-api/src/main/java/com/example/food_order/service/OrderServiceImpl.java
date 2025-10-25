@@ -17,7 +17,6 @@ import com.example.food_order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +27,6 @@ import java.math.BigDecimal;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.food_order.util.DateTimeUtil.MY_TIMEZONE;
@@ -127,24 +125,41 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "orders", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #searchId")
-    public PageResponse<OrderResponse> searchOrders(Pageable pageable, String searchId) {
+    @Cacheable(value = "orders", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #status + '-' + #searchId")
+    public PageResponse<OrderResponse> searchOrders(Pageable pageable, String status, String searchId) {
         if (searchId != null) {
             log.info("Searching orders with searchId: {}", searchId);
         }
 
+        OrderStatus orderStatus = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                orderStatus = OrderStatus.valueOf(status.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new InvalidStateException("Invalid status value provided: " + status);
+            }
+        }
+
         Page<Order> orderPage;
-        if (searchId != null && !searchId.isEmpty()) {
-            orderPage = orderRepository.findByIdContainingOrderByStatusCustom(searchId, pageable);
+
+        // แก้ไข logic condition
+        if (orderStatus != null && searchId != null && !searchId.trim().isEmpty()) {
+            // ค้นหาด้วยทั้ง status และ searchId
+            orderPage = orderRepository.findByStatusAndSlipIdContainingOrderByStatusCustom(pageable, orderStatus, searchId);
+        } else if (orderStatus != null) {
+            // ค้นหาด้วย status อย่างเดียว
+            orderPage = orderRepository.findByStatusOrderByStatusCustom(pageable, orderStatus);
+        } else if (searchId != null && !searchId.trim().isEmpty()) {
+            // ค้นหาด้วย searchId อย่างเดียว
+            orderPage = orderRepository.findBySlipIdContainingOrderByStatusCustom(pageable, searchId);
         } else {
+            // ดึงทั้งหมด
             orderPage = orderRepository.findAllByOrderByStatusAscCreatedAtDesc(pageable);
         }
 
-        List<OrderResponse> orderResponses = new ArrayList<>(
-                orderPage.getContent().stream()
-                        .map(OrderResponse::fromEntity)
-                        .toList()
-        );
+        List<OrderResponse> orderResponses = orderPage.getContent().stream()
+                .map(OrderResponse::fromEntity)
+                .toList();
 
         return PageResponse.<OrderResponse>builder()
                 .content(orderResponses)
@@ -166,42 +181,42 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    @CachePut(value = "orders", key = "#orderId")
+    @CacheEvict(value = "orders", allEntries = true)
     public OrderDetailResponse confirmOrder(Long orderId) {
         return updateStatus(orderId, OrderStatus.CONFIRMED);
     }
 
     @Override
     @Transactional
-    @CachePut(value = "orders", key = "#orderId")
+    @CacheEvict(value = "orders", allEntries = true)
     public OrderDetailResponse startCooking(Long orderId) {
         return updateStatus(orderId, OrderStatus.COOKING);
     }
 
     @Override
     @Transactional
-    @CachePut(value = "orders", key = "#orderId")
+    @CacheEvict(value = "orders", allEntries = true)
     public OrderDetailResponse startDelivering(Long orderId) {
         return updateStatus(orderId, OrderStatus.DELIVERING);
     }
 
     @Override
     @Transactional
-    @CachePut(value = "orders", key = "#orderId")
+    @CacheEvict(value = "orders", allEntries = true)
     public OrderDetailResponse completeOrder(Long orderId) {
         return updateStatus(orderId, OrderStatus.COMPLETED);
     }
 
     @Override
     @Transactional
-    @CachePut(value = "orders", key = "#orderId")
+    @CacheEvict(value = "orders", allEntries = true)
     public OrderDetailResponse cancelOrder(Long orderId) {
         return updateStatus(orderId, OrderStatus.CANCELLED);
     }
 
     @Override
     @Transactional
-    @CachePut(value = "orders", key = "#orderId")
+    @CacheEvict(value = "orders", allEntries = true)
     public OrderDetailResponse updateOrderStatus(Long orderId, UpdateOrderStatusRequest request) {
         return updateStatus(orderId, request.getStatus());
     }

@@ -28,13 +28,17 @@ export class OrderService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
-  loadOrders(page: number = 1, size: number = 10, searchId: string = '') {
+  loadOrders(page: number = 1, size: number = 10, status?: OrderStatus, searchId?: string) {
     this.loadingSubject.next(true);
     this.errorSubject.next(null);
 
     let params = new HttpParams()
       .set('page', (page - 1).toString())
       .set('size', size.toString());
+
+    if (status) {
+      params = params.set('status', status);
+    }
 
     if (searchId && searchId.trim() !== '') {
       params = params.set('searchId', searchId.trim());

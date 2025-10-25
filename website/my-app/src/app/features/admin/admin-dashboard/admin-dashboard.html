@@ -8,13 +8,24 @@
                         <i class="bi bi-clipboard-data"></i> จัดการออเดอร์
                     </h1>
 
-                    <!-- Search Box -->
+                    <!-- Search Box & Status Filter -->
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="text" class="form-control" placeholder="ค้นหา Order ID..."
                                     [(ngModel)]="searchId" (ngModelChange)="onSearchChange()">
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-funnel"></i></span>
+                                <select class="form-select" [(ngModel)]="filterStatus"
+                                    (ngModelChange)="onStatusFilterChange()">
+                                    @for (option of filterStatusOptions; track option.value) {
+                                    <option [value]="option.value">{{ option.label }}</option>
+                                    }
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -232,6 +243,35 @@
                 <div class="small text-muted">
                     <div><i class="bi bi-clock"></i> สร้าง: {{ order.created_at | date:'short' }}</div>
                     <div><i class="bi bi-arrow-clockwise"></i> อัปเดต: {{ order.updated_at | date:'short' }}</div>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-top" (click)="$event.stopPropagation()">
+                <div class="btn-group btn-group-sm w-100">
+                    @if (statusConfig[order.status].nextStatus) {
+                    <button
+                        class="btn btn-outline-{{statusConfig[statusConfig[order.status].nextStatus!].color}} equal-btn"
+                        [disabled]="isActionLoading(order, statusConfig[order.status].nextStatus!)"
+                        (click)="handleStatusAction(order, statusConfig[order.status].nextStatus!)">
+                        @if (isActionLoading(order, statusConfig[order.status].nextStatus!)) {
+                        <span class="spinner-border spinner-border-sm"></span>
+                        } @else {
+                        <i class="bi bi-{{statusConfig[statusConfig[order.status].nextStatus!].icon}}"></i>
+                        }
+                        {{statusConfig[statusConfig[order.status].nextStatus!].label}}
+                    </button>
+                    }
+                    @if (order.status !== OrderStatus.COMPLETED && order.status !== OrderStatus.CANCELLED) {
+                    <button class="btn btn-outline-danger equal-btn"
+                        [disabled]="isActionLoading(order, OrderStatus.CANCELLED)"
+                        (click)="handleStatusAction(order, OrderStatus.CANCELLED)">
+                        @if (isActionLoading(order, OrderStatus.CANCELLED)) {
+                        <span class="spinner-border spinner-border-sm"></span>
+                        } @else {
+                        <i class="bi bi-x"></i>
+                        }
+                        ยกเลิก
+                    </button>
+                    }
                 </div>
             </div>
         </div>

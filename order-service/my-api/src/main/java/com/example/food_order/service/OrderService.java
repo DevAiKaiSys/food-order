@@ -11,7 +11,7 @@ public interface OrderService {
 
     OrderDetailResponse createOrder(CreateOrderRequest request);
 
-    PageResponse<OrderResponse> searchOrders(Pageable pageable, String searchId);
+    PageResponse<OrderResponse> searchOrders(Pageable pageable, String status, String searchId);
 
     OrderDetailResponse getOrderDetails(Long orderId);
 
