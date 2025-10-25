@@ -102,7 +102,21 @@
                         </td>
                         <td class="small text-muted">{{ order.created_at | date:'short' }}</td>
                         <td class="text-center">
-                            <!-- ปุ่มจัดการ (เพิ่มเติมได้ภายหลัง) -->
+                            <div class="btn-group btn-group-sm">
+                                @if (statusConfig[order.status].nextStatus) {
+                                <button
+                                    class="btn btn-outline-{{statusConfig[statusConfig[order.status].nextStatus!].color}} equal-btn"
+                                    (click)="changeStatus(order.id, statusConfig[order.status].nextStatus!)">
+                                    <i class="bi bi-{{statusConfig[statusConfig[order.status].nextStatus!].icon}}"></i>
+                                    {{statusConfig[statusConfig[order.status].nextStatus!].label}}
+                                </button>
+                                }
+                                @if (order.status !== 'COMPLETED' && order.status !== 'CANCELLED') {
+                                <button class="btn btn-outline-danger" (click)="cancelOrder(order.id)">
+                                    <i class="bi bi-x"></i> ยกเลิก
+                                </button>
+                                }
+                            </div>
                         </td>
                     </tr>
                     }

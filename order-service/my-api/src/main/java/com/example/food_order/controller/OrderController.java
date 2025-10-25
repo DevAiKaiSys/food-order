@@ -1,6 +1,7 @@
 package com.example.food_order.controller;
 
 import com.example.food_order.dto.request.CreateOrderRequest;
+import com.example.food_order.dto.request.UpdateOrderStatusRequest;
 import com.example.food_order.dto.response.OrderDetailResponse;
 import com.example.food_order.dto.response.OrderResponse;
 import com.example.food_order.service.OrderService;
@@ -33,5 +34,12 @@ public class OrderController {
             @RequestParam(required = false) String searchId // ค่าพารามิเตอร์ searchId
     ) {
         return orderService.searchOrders(searchId, pageable);
+    }
+
+    @PatchMapping("/{orderId}/status")
+    public OrderDetailResponse updateOrderStatus(
+            @PathVariable Long orderId,
+            @Valid @RequestBody UpdateOrderStatusRequest request) {
+        return orderService.updateOrderStatus(orderId, request);
     }
 }

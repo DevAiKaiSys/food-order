@@ -21,7 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "  WHEN o.status = 'CANCELLED' THEN 2 " +
             "  WHEN o.status = 'COMPLETED' THEN 1 " +
             "  ELSE 0 " +
-            "END ASC, o.createdAt DESC")
+            "END ASC")
     Page<Order> findByIdContainingOrderByStatusCustom(String searchId, Pageable pageable);
 
     @Query("SELECT o FROM Order o ORDER BY " +
@@ -29,6 +29,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "  WHEN o.status = 'CANCELLED' THEN 2 " +
             "  WHEN o.status = 'COMPLETED' THEN 1 " +
             "  ELSE 0 " +
-            "END ASC, o.createdAt DESC")
+            "END ASC")
     Page<Order> findAllByOrderByStatusAscCreatedAtDesc(Pageable pageable);
 }

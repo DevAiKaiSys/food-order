@@ -1,9 +1,10 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { debounceTime, Subject, Subscription } from 'rxjs';
 import { OrderService } from '../../../core/services/order-service';
-import { Order } from '../../../shared/models/order.model';
+import { Order, OrderStatus, StatusConfig } from '../../../shared/models/order.model';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ToastService } from '../../../core/services/toast-service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -13,6 +14,7 @@ import { CommonModule } from '@angular/common';
 })
 export class AdminDashboard implements OnInit, OnDestroy {
   private orderService = inject(OrderService);
+  private toastService = inject(ToastService);
 
   searchId: string = '';
   searchSubject: Subject<string> = new Subject<string>();
@@ -23,11 +25,14 @@ export class AdminDashboard implements OnInit, OnDestroy {
   errorMessage = '';
   isOnline = true;
 
-  statusConfig: any = {
-    'PENDING': { label: 'รอดำเนินการ', color: 'warning', icon: 'clock' },
-    'PROCESSING': { label: 'กำลังดำเนินการ', color: 'info', icon: 'gear' },
-    'COMPLETED': { label: 'เสร็จสิ้น', color: 'success', icon: 'check-circle' },
-    'CANCELLED': { label: 'ยกเลิก', color: 'danger', icon: 'x-circle' }
+  orderStatuses: OrderStatus[] = ['PENDING', 'CONFIRMED', 'COOKING', 'DELIVERING', 'COMPLETED', 'CANCELLED'];
+  statusConfig: { [key in OrderStatus]: StatusConfig } = {
+    PENDING: { label: 'รอดำเนินการ', color: 'warning', icon: 'clock', nextStatus: 'CONFIRMED' },
+    CONFIRMED: { label: 'ยืนยัน', color: 'info', icon: 'check-circle', nextStatus: 'COOKING' },
+    COOKING: { label: 'กำลังทำอาหาร', color: 'primary', icon: 'fire', nextStatus: 'DELIVERING' },
+    DELIVERING: { label: 'กำลังจัดส่ง', color: 'dark', icon: 'truck-front', nextStatus: 'COMPLETED' },
+    COMPLETED: { label: 'เสร็จสิ้น', color: 'success', icon: 'check-circle-fill' },
+    CANCELLED: { label: 'ยกเลิก', color: 'danger', icon: 'x-circle' }
   };
 
   private subscriptions: Subscription[] = [];
@@ -137,5 +142,33 @@ export class AdminDashboard implements OnInit, OnDestroy {
     }
 
     return pages;
+  }
+
+  changeStatus(orderId: number, newStatus: OrderStatus) {
+    this.orderService.updateOrderStatus(orderId, newStatus).subscribe({
+      next: () => {
+        this.toastService.show(
+          `เปลี่ยนสถานะเป็น ${this.statusConfig[newStatus].label} สำเร็จ`,
+          'success'
+        );
+        // Reload orders from API after status change
+        this.loadOrders();
+      },
+      error: (error) => {
+        console.error('Error updating order status:', error);
+        const errorMsg = error?.error?.message || 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ';
+        this.toastService.show(errorMsg, 'error');
+      }
+    });
+  }
+
+  cancelOrder(orderId: number) {
+    const order = this.orders.find(o => o.id === orderId);
+    if (order?.status === 'COMPLETED') {
+      this.toastService.show('ไม่สามารถยกเลิกออเดอร์ที่เสร็จสิ้นแล้ว', 'error');
+      return;
+    }
+
+    this.changeStatus(orderId, 'CANCELLED');
   }
 }

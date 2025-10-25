@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "08dadd92-8a52-4346-b083-46e74a0b8bec",
+		"_postman_id": "f8f3bcf6-a6f6-453a-9189-8cbb86511d28",
 		"name": "Food Order API",
-		"description": "Postman collection สำหรับทดสอบ Order, Product, Customer API",
+		"description": "Postman collection สำหรับทดสอบ Order API ให้ตรงกับ Spring Validation",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "30479689"
 	},
@@ -19,7 +19,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerName\": \"น้องโร\",\n  \"phone\": \"0876534152\",\n  \"items\": [\n    { \"id\": 3, \"menuName\": \"ต้มยำกุ้ง\", \"price\": 80, \"image\": \"https://cdn-icons-png.flaticon.com/512/1046/1046784.png\", \"category\": \"อาหารประเภทต้ม\", \"qty\": 3 },\n    { \"id\": 2, \"menuName\": \"ส้มตำ\", \"price\": 40, \"image\": \"https://cdn-icons-png.flaticon.com/512/933/933310.png\", \"category\": \"อาหารจานเดียว\", \"qty\": 3 },\n    { \"id\": 1, \"menuName\": \"ข้าวผัดกุ้ง\", \"price\": 60, \"image\": \"https://cdn-icons-png.flaticon.com/512/3174/3174887.png\", \"category\": \"อาหารจานหลัก\", \"qty\": 1 },\n    { \"id\": 5, \"menuName\": \"ข้าวมันไก่\", \"price\": 45, \"image\": \"https://cdn-icons-png.flaticon.com/512/3174/3174891.png\", \"category\": \"อาหารจานเดียว\", \"qty\": 1 }\n  ],\n  \"total\": 465\n}"
+					"raw": "{\n  \"customer_name\": \"น้องโร\",\n  \"phone\": \"0876534152\",\n  \"details\": [\n    {\n      \"id\": 3,\n      \"menu_name\": \"ต้มยำกุ้ง\",\n      \"price\": 80,\n      \"image\": \"https://cdn-icons-png.flaticon.com/512/1046/1046784.png\",\n      \"category\": \"อาหารประเภทต้ม\",\n      \"qty\": 3\n    },\n    {\n      \"id\": 2,\n      \"menu_name\": \"ส้มตำ\",\n      \"price\": 40,\n      \"image\": \"https://cdn-icons-png.flaticon.com/512/933/933310.png\",\n      \"category\": \"อาหารจานเดียว\",\n      \"qty\": 3\n    },\n    {\n      \"id\": 1,\n      \"menu_name\": \"ข้าวผัดกุ้ง\",\n      \"price\": 60,\n      \"image\": \"https://cdn-icons-png.flaticon.com/512/3174/3174887.png\",\n      \"category\": \"อาหารจานหลัก\",\n      \"qty\": 1\n    },\n    {\n      \"id\": 5,\n      \"menu_name\": \"ข้าวมันไก่\",\n      \"price\": 45,\n      \"image\": \"https://cdn-icons-png.flaticon.com/512/3174/3174891.png\",\n      \"category\": \"อาหารจานเดียว\",\n      \"qty\": 1\n    }\n  ],\n  \"total_amount\": 465\n}"
 				},
 				"url": {
 					"raw": "http://localhost:8080/api/orders",
@@ -31,6 +31,80 @@
 					"path": [
 						"api",
 						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search Orders",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ✅ ตรวจสอบ status code 200",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// ✅ ตรวจสอบว่ามี field 'content' ใน response (เพราะใช้ Page<OrderResponse>)",
+							"pm.test(\"Response contains 'content' field\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('content');",
+							"});",
+							"",
+							"// ✅ ตรวจสอบว่า content เป็น array",
+							"pm.test(\"'content' is an array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.content).to.be.an('array');",
+							"});",
+							"",
+							"// ✅ ตรวจสอบ field ภายใน order ถ้ามีข้อมูล",
+							"pm.test(\"First order has expected fields\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.content.length > 0) {",
+							"        pm.expect(jsonData.content[0]).to.have.property('id');",
+							"        pm.expect(jsonData.content[0]).to.have.property('customer_name');",
+							"        pm.expect(jsonData.content[0]).to.have.property('total_amount');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/api/orders?page=0&size=10&searchId=",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"orders"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "10"
+						},
+						{
+							"key": "searchId",
+							"value": ""
+						}
 					]
 				}
 			},

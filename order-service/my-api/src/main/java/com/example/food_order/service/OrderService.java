@@ -2,12 +2,14 @@ package com.example.food_order.service;
 
 import com.example.food_order.dto.request.CreateOrderRequest;
 import com.example.food_order.dto.request.OrderItemRequest;
+import com.example.food_order.dto.request.UpdateOrderStatusRequest;
 import com.example.food_order.dto.response.OrderDetailResponse;
 import com.example.food_order.dto.response.OrderResponse;
 import com.example.food_order.entity.Customer;
 import com.example.food_order.entity.Order;
 import com.example.food_order.entity.OrderItem;
 import com.example.food_order.entity.OrderStatus;
+import com.example.food_order.exception.ResourceNotFoundException;
 import com.example.food_order.repository.CustomerRepository;
 import com.example.food_order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -100,7 +102,7 @@ public class OrderService {
                 .withHour(23).withMinute(59).withSecond(59).withNano(999999999)
                 .withZoneSameInstant(ZoneOffset.UTC); // เปลี่ยนให้เป็น UTC
 
-        // ดึงหมายเลขลำดับจากฐานข้อมูล (หรือใช้ AtomicLong)
+        // ดึงหมายเลขลำดับจากฐานข้อมูล (เฉพาะของวันนี้)
         Long orderCount = orderRepository.countOrdersByDate(startDate, endDate);
 
         // หรือ ค้นหาจำนวนออเดอร์ที่มี slipId ที่มี prefix "ORD-" และวันที่ตรงกัน
@@ -133,6 +135,33 @@ public class OrderService {
                 .collect(Collectors.toList());
 
         return new PageImpl<>(orderResponses, pageable, orderPage.getTotalElements());
+    }
+
+    @Transactional
+    public OrderDetailResponse updateOrderStatus(Long orderId, UpdateOrderStatusRequest request) {
+        log.info("Updating order status for orderId: {} to status: {}", orderId, request.getStatus());
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        OrderStatus currentStatus = order.getStatus();
+        OrderStatus newStatus = request.getStatus();
+
+        // ตรวจสอบว่าสามารถเปลี่ยน status ได้หรือไม่
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new IllegalStateException(
+                    String.format("Cannot transition from %s to %s", currentStatus, newStatus)
+            );
+        }
+
+        // อัพเดท status
+        order.setStatus(newStatus);
+
+        Order savedOrder = orderRepository.save(order);
+
+        log.info("Order status updated successfully for orderId: {}", orderId);
+
+        return OrderDetailResponse.fromEntity(savedOrder);
     }
 }
 

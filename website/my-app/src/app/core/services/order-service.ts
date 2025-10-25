@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
-import { Order } from '../../shared/models/order.model';
+import { Order, OrderStatus } from '../../shared/models/order.model';
 import { environment } from '@environments/environment';
 
 @Injectable({
@@ -33,10 +33,9 @@ export class OrderService {
     this.errorSubject.next(null);
 
     let params = new HttpParams()
-      .set('page', (page - 1).toString()) // backend ใช้ page index เริ่มที่ 0
+      .set('page', (page - 1).toString()) // backend ใช้ index เริ่มที่ 0
       .set('size', size.toString());
 
-    // เพิ่ม searchId ถ้ามีค่า
     if (searchId && searchId.trim() !== '') {
       params = params.set('searchId', searchId.trim());
     }
@@ -46,9 +45,7 @@ export class OrderService {
         console.error('Error loading orders:', error);
         this.loadingSubject.next(false);
 
-        // Set appropriate error message based on error type
         let errorMessage = 'ไม่สามารถโหลดข้อมูลได้';
-
         if (error.status === 0) {
           errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
         } else if (error.status === 404) {
@@ -64,15 +61,32 @@ export class OrderService {
       })
     ).subscribe({
       next: (response) => {
-        this.ordersSubject.next(response.data.content || response);
+        const data = response?.data;
+        if (!data) {
+          this.ordersSubject.next([]);
+          this.loadingSubject.next(false);
+          return;
+        }
+
+        this.ordersSubject.next(data.content || []);
+
+        // pagination
+        this.paginationSubject.next({
+          totalPages: data.total_pages || 0,
+          totalItems: data.total_elements || 0,
+          currentPage: (data.number || 0) + 1, // +1 เพราะ backend เริ่มที่ 0
+          pageSize: data.size || size
+        });
+
         this.loadingSubject.next(false);
         this.errorSubject.next(null);
       },
       error: () => {
-        // Error already handled in catchError
+        // จัดการใน catchError แล้ว
       }
     });
   }
+
 
   createOrder(order: Partial<Order>): Observable<any> {
     return this.http.post<any>(this.apiUrl, order).pipe(
@@ -88,5 +102,24 @@ export class OrderService {
 
   clearError(): void {
     this.errorSubject.next(null);
+  }
+
+  updateOrderStatus(orderId: number, status: OrderStatus): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${orderId}/status`, { status }).pipe(
+      catchError(error => {
+        console.error('Error updating order status:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  cancelOrder(orderId: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${orderId}`).pipe(
+      tap(() => this.loadOrders()),
+      catchError(error => {
+        console.error('Error canceling order:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }
