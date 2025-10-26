@@ -71,21 +71,11 @@
               }
             </div>
             <!-- Customer Info Form -->
-            <div class="mt-4">
-              <h6 class="fw-bold mb-3">ข้อมูลลูกค้า</h6>
-              <div class="mb-3">
-                <label class="form-label small">ชื่อ-นามสกุล</label>
-                <input type="text" class="form-control" [(ngModel)]="customerName" placeholder="กรอกชื่อ" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label small">เบอร์โทร</label>
-                <input type="tel" class="form-control" [(ngModel)]="customerPhone" placeholder="08X-XXX-XXXX" required>
-              </div>
-            </div>
+            <app-customer-form [customerForm]="customerForm"></app-customer-form>
             <!-- Total and Submit -->
             <div class="border-top pt-3 mt-3">
               <button class="btn btn-success btn-lg w-100" (click)="submitOrder()"
-                [disabled]="cart.length === 0 || !customerName || !customerPhone">
+                [disabled]="cart.length === 0 || isPlacingOrder">
                 <i class="bi bi-check-circle"></i> ยืนยันสั่งซื้อ
               </button>
             </div>
@@ -107,8 +97,8 @@
 <!-- Mobile Cart Offcanvas -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileCartOffcanvas">
   <div class="offcanvas-header bg-primary text-white">
-    <h5 class="offcanvas-title"> <i class="bi bi-cart"></i> ตะกร้าสินค้า ({{cart.length}}) </h5> <button type="button"
-      class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    <h5 class="offcanvas-title"> <i class="bi bi-cart"></i> ตะกร้าสินค้า ({{cart.length}}) </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
   </div>
   <div class="offcanvas-body">
     <!-- Cart Items (same as Desktop) -->
@@ -133,21 +123,11 @@
         }
       </div>
       <!-- Customer Info Form -->
-      <div class="mt-4">
-        <h6 class="fw-bold mb-3">ข้อมูลลูกค้า</h6>
-        <div class="mb-3">
-          <label class="form-label small">ชื่อ-นามสกุล</label>
-          <input type="text" class="form-control" [(ngModel)]="customerName" placeholder="กรอกชื่อ" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small">เบอร์โทร</label>
-          <input type="tel" class="form-control" [(ngModel)]="customerPhone" placeholder="08X-XXX-XXXX" required>
-        </div>
-      </div>
+      <app-customer-form [customerForm]="customerForm"></app-customer-form>
       <!-- Total and Submit -->
       <div class="border-top pt-3 mt-3">
         <button class="btn btn-success btn-lg w-100" (click)="submitOrder()"
-          [disabled]="cart.length === 0 || !customerName || !customerPhone">
+          [disabled]="cart.length === 0 || isPlacingOrder">
           <i class="bi bi-check-circle"></i> ยืนยันสั่งซื้อ
         </button>
       </div>

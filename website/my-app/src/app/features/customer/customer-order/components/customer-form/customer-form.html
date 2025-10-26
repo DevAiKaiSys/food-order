@@ -1,0 +1,37 @@
+<form [formGroup]="customerForm">
+  <div class="mt-4">
+    <h6 class="fw-bold mb-3">ข้อมูลลูกค้า</h6>
+    <div class="mb-3">
+      <label class="form-label small">ชื่อ-นามสกุล</label>
+      <input type="text" class="form-control" formControlName="customerName" placeholder="กรอกชื่อ-นามสกุล"
+        [ngClass]="{ 'is-invalid': f['customerName'].touched && f['customerName'].invalid }">
+      @if (f['customerName'].touched && f['customerName'].invalid) {
+      <div class="invalid-feedback">
+        @if (f['customerName'].errors?.['required']) {
+        กรุณากรอกชื่อลูกค้า
+        }
+        @if (f['customerName'].errors?.['minlength']) {
+        ชื่อต้องมีอย่างน้อย 2 ตัวอักษร
+        }
+      </div>
+      }
+    </div>
+    <div class="mb-3">
+      <label class="form-label small">เบอร์โทร</label>
+      <input type="tel" class="form-control" formControlName="phone" placeholder="เช่น 0812345678"
+        [ngClass]="{ 'is-invalid': f['phone'].touched && f['phone'].invalid }">
+      @if (f['phone'].touched && f['phone'].invalid) {
+      <div class="invalid-feedback">
+        @if (f['phone'].errors?.['required']) {
+        กรุณากรอกเบอร์โทรศัพท์
+        }
+        @if (f['phone'].errors?.['invalidPhone']) {
+        รูปแบบเบอร์โทรไม่ถูกต้อง (ต้อง 10 หลัก)
+        <br>
+        (เช่น 0XXXXXXXXX, +66XXXXXXXX)
+        }
+      </div>
+      }
+    </div>
+  </div>
+</form>

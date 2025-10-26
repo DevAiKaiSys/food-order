@@ -1,5 +1,11 @@
 .card {
     border-radius: 12px;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .card-body {
@@ -11,6 +17,11 @@
     }
 }
 
+.sticky-top {
+    top: 20px; 
+}
+
+
 @media (max-width: 992px) {
     .sticky-top {
         position: relative;
@@ -20,8 +31,19 @@
 
 .floating-cart-btn {
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+    transition: transform 0.2s ease-in-out;
 }
 
 .floating-cart-btn:hover {
     transform: scale(1.1);
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.offcanvas-body form {
+    margin-top: 1.5rem;
 }
