@@ -26,7 +26,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -36,6 +36,9 @@ class OrderServiceTest {
 
     @Mock
     private CustomerRepository customerRepository;
+
+    @Mock
+    private OutboxEventService outboxEventService;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -98,6 +101,8 @@ class OrderServiceTest {
         assertNotNull(savedOrder.getCreatedAt());
         assertNotNull(savedOrder.getUpdatedAt());
         assertEquals(savedOrder.getCreatedAt(), savedOrder.getUpdatedAt());
+
+        verify(outboxEventService, times(1)).createOrderStatusChangedEvent(any(Order.class));
     }
 
     @Test
@@ -112,18 +117,24 @@ class OrderServiceTest {
         assertEquals(order.getId(), response.getId());
         assertEquals(customer.getName(), response.getCustomer().getName());
         assertEquals(order.getTotalAmount(), response.getTotalAmount());
+
+        verify(outboxEventService, times(1)).createOrderStatusChangedEvent(any(Order.class));
     }
 
     @Test
     void getOrderDetails_whenOrderNotFound_shouldThrowResourceNotFoundException() {
         when(orderRepository.findById(anyLong())).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> orderService.getOrderDetails(1L));
+
+        verify(outboxEventService, never()).createOrderStatusChangedEvent(any(Order.class));
     }
 
     @Test
     void updateStatus_whenOrderNotFound_shouldThrowResourceNotFoundException() {
         when(orderRepository.findById(anyLong())).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> orderService.confirmOrder(1L));
+
+        verify(outboxEventService, never()).createOrderStatusChangedEvent(any(Order.class));
     }
 
     @Test
@@ -132,6 +143,8 @@ class OrderServiceTest {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
         assertThrows(InvalidStateException.class, () -> orderService.startCooking(1L));
+
+        verify(outboxEventService, never()).createOrderStatusChangedEvent(any(Order.class));
     }
 
     @Test
@@ -140,6 +153,8 @@ class OrderServiceTest {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
         assertThrows(InvalidStateException.class, () -> orderService.completeOrder(1L));
+
+        verify(outboxEventService, never()).createOrderStatusChangedEvent(any(Order.class));
     }
 
     @Test
@@ -150,6 +165,8 @@ class OrderServiceTest {
         request.setStatus(OrderStatus.CONFIRMED);
 
         assertThrows(InvalidStateException.class, () -> orderService.updateOrderStatus(1L, request));
+
+        verify(outboxEventService, never()).createOrderStatusChangedEvent(any(Order.class));
     }
 
     @Test
@@ -160,6 +177,8 @@ class OrderServiceTest {
         request.setStatus(OrderStatus.CONFIRMED);
 
         assertThrows(InvalidStateException.class, () -> orderService.updateOrderStatus(1L, request));
+
+        verify(outboxEventService, never()).createOrderStatusChangedEvent(any(Order.class));
     }
 
     @Test
@@ -168,6 +187,8 @@ class OrderServiceTest {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
         assertThrows(InvalidStateException.class, () -> orderService.cancelOrder(1L));
+
+        verify(outboxEventService, never()).createOrderStatusChangedEvent(any(Order.class));
     }
 
     private void mockOrderRepository() {

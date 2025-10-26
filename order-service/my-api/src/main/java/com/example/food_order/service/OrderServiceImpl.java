@@ -38,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
+    private final OutboxEventService outboxEventService;
 
     @Override
     @Transactional
@@ -57,6 +58,8 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(order);
         log.info("Order created successfully with ID: {}", savedOrder.getId());
+
+        outboxEventService.createOrderStatusChangedEvent(savedOrder);
 
         return OrderDetailResponse.fromEntity(savedOrder);
     }
@@ -236,6 +239,9 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(newStatus);
         Order savedOrder = orderRepository.save(order);
+
+        outboxEventService.createOrderStatusChangedEvent(savedOrder);
+
         log.info("Order status updated successfully for orderId: {}", orderId);
 
         return OrderDetailResponse.fromEntity(savedOrder);
