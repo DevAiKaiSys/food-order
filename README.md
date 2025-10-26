@@ -2,7 +2,7 @@
 
 ## Clone Project
 
-```
+```bash
 git clone https://github.com/DevAiKaiSys/food-order.git
 cd food-order
 ```
@@ -13,21 +13,35 @@ cd food-order
 
 Production Mode
 
-```
+```bash
 cd website/docker
 docker compose up -d
 ```
 
 Development Mode
 
-```
+```bash
 cd website/docker-development
 docker compose -f docker-compose.dev.yaml up -d
 ```
 
+#### Running end-to-end tests
+
+Install playwright
+
+```bash
+npx playwright install 
+```
+
+For end-to-end (e2e) testing, run:
+
+```bash
+ng e2e
+```
+
 ### Order Service (Backend) & MySQL
 
-```
+```bash
 cd order-service/docker
 docker compose up -d
 ```
@@ -36,14 +50,14 @@ docker compose up -d
 
 Stop services:
 
-```
+```bash
 docker compose down        # Stop only
 docker compose down -v     # Stop and remove volumes
 ```
 
 Rebuild and restart:
 
-```
+```bash
 docker compose up --build  # Rebuild with logs
 ```
 

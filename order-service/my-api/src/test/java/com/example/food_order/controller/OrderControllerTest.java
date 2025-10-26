@@ -6,6 +6,7 @@ import com.example.food_order.dto.response.OrderDetailResponse;
 import com.example.food_order.dto.response.OrderDetailResponse.CustomerInfo;
 import com.example.food_order.dto.response.OrderDetailResponse.OrderItemInfo;
 import com.example.food_order.entity.OrderStatus;
+import com.example.food_order.exception.ResourceNotFoundException;
 import com.example.food_order.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.tracing.Tracer;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,6 +25,7 @@ import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -96,5 +99,26 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.customer.name").value("John Doe"))
                 .andExpect(jsonPath("$.data.total_amount").value(100.0));
+    }
+
+    @Test
+    void createOrder_whenInvalidRequest_shouldReturnBadRequest() throws Exception {
+        createOrderRequest.setCustomerName("");
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createOrderRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getOrderDetails_whenOrderNotFound_shouldReturnNotFound() throws Exception {
+        when(orderService.getOrderDetails(any(Long.class)))
+                .thenThrow(new ResourceNotFoundException("Order not found"));
+
+        mockMvc.perform(get("/api/orders/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status_code").value("MDB-404"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status_msg").value("Order not found"));
     }
 }
