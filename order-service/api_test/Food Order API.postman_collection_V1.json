@@ -1,12 +1,275 @@
 {
 	"info": {
-		"_postman_id": "9b6a323b-23cc-49f1-a54e-fc41d5c0cd20",
+		"_postman_id": "94e2da87-f594-400a-b6c3-c6cfc9eb6480",
 		"name": "Food Order API",
-		"description": "Postman collection สำหรับทดสอบ Order API ให้ตรงกับ Spring Validation",
+		"description": "Postman collection สำหรับทดสอบ Order API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "30479689"
 	},
 	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"token\", jsonData.token);",
+									"    console.log(\"Admin Token saved: \" + jsonData.token);",
+									"}",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "Login ด้วย admin credentials และบันทึก JWT token อัตโนมัติ"
+					},
+					"response": []
+				},
+				{
+					"name": "Login - User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"token\", jsonData.token);",
+									"    console.log(\"User Token saved: \" + jsonData.token);",
+									"}",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user\",\n  \"password\": \"user123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "Login ด้วย user credentials และบันทึก JWT token อัตโนมัติ"
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Invalid Credentials",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response has error message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"invalid\",\n  \"password\": \"wrong\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "ทดสอบ login ด้วย credentials ที่ไม่ถูกต้อง (ควรได้ 401)"
+					},
+					"response": []
+				},
+				{
+					"name": "User Info",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user info\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/user",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"user"
+							]
+						},
+						"description": "ดึงข้อมูล user ที่ login อยู่ (ต้องมี token)"
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Info",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has admin info\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"    pm.expect(jsonData).to.have.property('role');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin"
+							]
+						},
+						"description": "ดึงข้อมูล admin (ต้อง login ด้วย admin และมี token)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints สำหรับ Authentication และ Authorization"
+		},
 		{
 			"name": "Create Order",
 			"request": {
@@ -22,12 +285,10 @@
 					"raw": "{\n  \"customer_name\": \"น้องโร\",\n  \"phone\": \"0876534152\",\n  \"details\": [\n    {\n      \"id\": 3,\n      \"menu_name\": \"ต้มยำกุ้ง\",\n      \"price\": 80,\n      \"image\": \"https://cdn-icons-png.flaticon.com/512/1046/1046784.png\",\n      \"category\": \"อาหารประเภทต้ม\",\n      \"qty\": 3\n    },\n    {\n      \"id\": 2,\n      \"menu_name\": \"ส้มตำ\",\n      \"price\": 40,\n      \"image\": \"https://cdn-icons-png.flaticon.com/512/933/933310.png\",\n      \"category\": \"อาหารจานเดียว\",\n      \"qty\": 3\n    },\n    {\n      \"id\": 1,\n      \"menu_name\": \"ข้าวผัดกุ้ง\",\n      \"price\": 60,\n      \"image\": \"https://cdn-icons-png.flaticon.com/512/3174/3174887.png\",\n      \"category\": \"อาหารจานหลัก\",\n      \"qty\": 1\n    },\n    {\n      \"id\": 5,\n      \"menu_name\": \"ข้าวมันไก่\",\n      \"price\": 45,\n      \"image\": \"https://cdn-icons-png.flaticon.com/512/3174/3174891.png\",\n      \"category\": \"อาหารจานเดียว\",\n      \"qty\": 1\n    }\n  ],\n  \"total_amount\": 465\n}"
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/orders",
-					"protocol": "http",
+					"raw": "{{baseUrl}}/api/orders",
 					"host": [
-						"localhost"
+						"{{baseUrl}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"orders"
@@ -78,12 +339,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/orders?page=0&size=10&searchId=",
-					"protocol": "http",
+					"raw": "{{baseUrl}}/api/orders?page=0&size=10&searchId=",
 					"host": [
-						"localhost"
+						"{{baseUrl}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"orders"
@@ -138,12 +397,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/orders/{{orderId}}",
-					"protocol": "http",
+					"raw": "{{baseUrl}}/api/orders/{{orderId}}",
 					"host": [
-						"localhost"
+						"{{baseUrl}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"orders",
@@ -182,12 +439,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/orders/{{orderId}}/confirm",
-					"protocol": "http",
+					"raw": "{{baseUrl}}/api/orders/{{orderId}}/confirm",
 					"host": [
-						"localhost"
+						"{{baseUrl}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"orders",
@@ -227,12 +482,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/orders/{{orderId}}/cook",
-					"protocol": "http",
+					"raw": "{{baseUrl}}/api/orders/{{orderId}}/cook",
 					"host": [
-						"localhost"
+						"{{baseUrl}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"orders",
@@ -272,12 +525,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/orders/{{orderId}}/deliver",
-					"protocol": "http",
+					"raw": "{{baseUrl}}/api/orders/{{orderId}}/deliver",
 					"host": [
-						"localhost"
+						"{{baseUrl}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"orders",
@@ -317,12 +568,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/orders/{{orderId}}/complete",
-					"protocol": "http",
+					"raw": "{{baseUrl}}/api/orders/{{orderId}}/complete",
 					"host": [
-						"localhost"
+						"{{baseUrl}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"orders",
@@ -362,12 +611,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/orders/{{orderId}}/cancel",
-					"protocol": "http",
+					"raw": "{{baseUrl}}/api/orders/{{orderId}}/cancel",
 					"host": [
-						"localhost"
+						"{{baseUrl}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"orders",
@@ -383,6 +630,11 @@
 		{
 			"key": "orderId",
 			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
 			"type": "string"
 		}
 	]
