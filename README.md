@@ -9,6 +9,15 @@ cd food-order
 
 ##  Running the Application
 
+### Order Service (Backend) & MySQL & Redis
+
+The first time building the image took a long time, about 3 minutes.
+
+```bash
+cd order-service/docker
+docker compose up -d
+```
+
 ### Website (Frontend)
 
 Production Mode
@@ -37,13 +46,6 @@ For end-to-end (e2e) testing, run:
 
 ```bash
 ng e2e
-```
-
-### Order Service (Backend) & MySQL
-
-```bash
-cd order-service/docker
-docker compose up -d
 ```
 
 ## Troubleshooting
