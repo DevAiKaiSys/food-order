@@ -7,6 +7,8 @@ import com.example.food_order.dto.response.OrderDetailResponse.CustomerInfo;
 import com.example.food_order.dto.response.OrderDetailResponse.OrderItemInfo;
 import com.example.food_order.entity.OrderStatus;
 import com.example.food_order.exception.ResourceNotFoundException;
+import com.example.food_order.security.JwtAuthenticationFilter;
+import com.example.food_order.service.JwtService;
 import com.example.food_order.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.tracing.Tracer;
@@ -14,7 +16,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -25,12 +30,20 @@ import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(OrderController.class)
+@WebMvcTest(
+        controllers = OrderController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = {JwtAuthenticationFilter.class, WebSecurityConfiguration.class}
+        )
+)
 class OrderControllerTest {
 
     @Autowired
@@ -41,6 +54,9 @@ class OrderControllerTest {
 
     @MockitoBean
     private OrderService orderService;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     @MockitoBean
     private Tracer tracer;
@@ -91,6 +107,8 @@ class OrderControllerTest {
                 .thenReturn(orderDetailResponse);  // ทำให้ mock ค่าผลลัพธ์จาก service
 
         mockMvc.perform(post("/api/orders")
+                        .with(csrf())
+                        .with(user("testuser").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createOrderRequest)))
                 .andExpect(status().isCreated())
@@ -106,6 +124,8 @@ class OrderControllerTest {
         createOrderRequest.setCustomerName("");
 
         mockMvc.perform(post("/api/orders")
+                        .with(csrf())
+                        .with(user("testuser").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createOrderRequest)))
                 .andExpect(status().isBadRequest());
@@ -116,7 +136,8 @@ class OrderControllerTest {
         when(orderService.getOrderDetails(any(Long.class)))
                 .thenThrow(new ResourceNotFoundException("Order not found"));
 
-        mockMvc.perform(get("/api/orders/999"))
+        mockMvc.perform(get("/api/orders/999")
+                        .with(user("testuser").roles("USER")))
                 .andExpect(status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status_code").value("MDB-404"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status_msg").value("Order not found"));
